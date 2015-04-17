@@ -95,3 +95,8 @@ HLTDoLocalStripSequenceRegForBTag = cms.Sequence(striptrackerlocalreco)
 
 from FastSimulation.Tracking.HLTIterativeTracking_cff import *
 
+# replace muon hlt digis with empty sequences
+hltMuonCSCDigis = cms.Sequence()
+hltMuonDTDigis = cms.Sequence()
+hltMuonRPCDigis = cms.Sequence()
+
