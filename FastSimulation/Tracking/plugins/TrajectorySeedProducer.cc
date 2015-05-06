@@ -425,7 +425,7 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
             continue;
         }
 
-        TrajectorySeedHitCandidate previousTrackerHit;
+	TrajectorySeedHitCandidate previousTrackerHit;
         TrajectorySeedHitCandidate currentTrackerHit;
         unsigned int layersCrossed=0;
 
