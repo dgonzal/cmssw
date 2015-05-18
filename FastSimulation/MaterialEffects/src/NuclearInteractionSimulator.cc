@@ -256,7 +256,8 @@ void NuclearInteractionSimulator::compute(ParticlePropagator& Particle, RandomEn
       // The elastic part
       double elastic = random->flatShoot();
       if ( elastic < theElasticLength/theTotalInteractionLength ) {
-
+	// switch off elastic interactions
+	/*
 	//       	helas->Fill(pHadron);
 	
 	// Characteristic scattering angle for the elastic part
@@ -285,7 +286,7 @@ void NuclearInteractionSimulator::compute(ParticlePropagator& Particle, RandomEn
 
 	//	hscatter->Fill(myTheta);
 	//	hscatter2->Fill(pHadron,myTheta);
-	
+	*/
       } 
 
       // The inelastic part
