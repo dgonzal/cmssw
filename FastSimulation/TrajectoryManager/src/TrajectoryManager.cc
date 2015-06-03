@@ -146,7 +146,7 @@ TrajectoryManager::reconstruct(const TrackerTopology *tTopo, RandomEngineAndDist
 
   // Clear the hits of the previous event
   //  thePSimHits->clear();
-  thePSimHits.clear();
+  thePSimHits.reset(new edm::PSimHitContainer);
 
   // The new event
   XYZTLorentzVector myBeamPipe = XYZTLorentzVector(0.,2.5, 9999999.,0.);
@@ -294,7 +294,7 @@ TrajectoryManager::reconstruct(const TrackerTopology *tTopo, RandomEngineAndDist
 	    // Return one or two (for overlap regions) PSimHits in the full 
 	    // tracker geometry
 	    if ( theGeomTracker ) 
-	      createPSimHits(*cyliter, PP, thePSimHits[fsimi], fsimi,mySimEvent->track(fsimi).type(), tTopo);
+	      createPSimHits(*cyliter, PP, thePSimHits.get(), fsimi,mySimEvent->track(fsimi).type(), tTopo);
 
 	    /*
 	    myHistos->fill("h302",PP.X() ,PP.Y());
@@ -548,7 +548,7 @@ TrajectoryManager::moveAllDaughters(int fsimi, const Rotation& r, double rescale
 void
 TrajectoryManager::createPSimHits(const TrackerLayer& layer,
                                   const ParticlePropagator& PP,
-				  std::map<double,PSimHit>& theHitMap,
+				  edm::PSimHitContainer * theHits,
 				  int trackID, int partID, const TrackerTopology *tTopo) {
 
   // Propagate the particle coordinates to the closest tracker detector(s) 
@@ -577,11 +577,10 @@ TrajectoryManager::createPSimHits(const TrackerLayer& layer,
     = tkLayer->compatibleDets( trajState, alongProp, est);
 
   // And create the corresponding PSimHits
-  std::map<double,PSimHit> theTrackHits;
   for (std::vector<DetWithState>::const_iterator i=compat.begin(); i!=compat.end(); i++) {
     // Correct Eloss for last 3 rings of TEC (thick sensors, 0.05 cm)
-    // Disgusting fudge factor ! 
-    makePSimHits( i->first, i->second, theHitMap, trackID, eloss, thickness, partID,tTopo);
+    // Disgusting fudge factor ! makepsimhits
+    makePSimHits( i->first, i->second, theHits, trackID, eloss, thickness, partID,tTopo);
   }
 
 }
@@ -601,25 +600,29 @@ TrajectoryManager::makeTrajectoryState( const DetLayer* layer,
 void 
 TrajectoryManager::makePSimHits( const GeomDet* det, 
 				 const TrajectoryStateOnSurface& ts,
-				 std::map<double,PSimHit>& theHitMap,
+				 edm::PSimHitContainer * theHits,
 				 int tkID, float el, float thick, int pID,
 				 const TrackerTopology *tTopo) 
 {
 
   std::vector< const GeomDet*> comp = det->components();
+  std::pair<double,PSimHit> thePair;
   if (!comp.empty()) {
     for (std::vector< const GeomDet*>::const_iterator i = comp.begin();
 	 i != comp.end(); i++) {
       auto du = (*i);
       if (du->isLeaf())  // not even needed (or it should iterate if really not leaf)
-	theHitMap.insert(theHitMap.end(),makeSinglePSimHit( *du, ts, tkID, el, thick, pID,tTopo));
+	thePair = makeSinglePSimHit( *du, ts, tkID, el, thick, pID,tTopo);
     }
   }
   else {
     auto du = (det);
-    theHitMap.insert(theHitMap.end(),makeSinglePSimHit( *du, ts, tkID, el, thick, pID,tTopo));
+    thePair = makeSinglePSimHit( *du, ts, tkID, el, thick, pID,tTopo);
   }
-
+  // Keep only those hits that are on the physical volume of a module
+  // (The other hits have been assigned a negative <double> value. 
+  if ( thePair.first > 0. ) 
+    theHits->push_back(thePair.second);
 }
 
 std::pair<double,PSimHit> 
@@ -925,6 +928,7 @@ TrajectoryManager::detLayer( const TrackerLayer& layer, float zpos) const
   else return theLayerMap[layer.layerNumber()+theNegLayerOffset];
 }
 
+/*
 void 
 TrajectoryManager::loadSimHits(edm::PSimHitContainer & c) const
 {
@@ -935,18 +939,17 @@ TrajectoryManager::loadSimHits(edm::PSimHitContainer & c) const
     std::map<double,PSimHit>::const_iterator it = (itrack->second).begin();
     std::map<double,PSimHit>::const_iterator itEnd = (itrack->second).end();
     for( ; it!= itEnd; ++it) { 
-      /*
       DetId theDetUnitId((it->second).detUnitId());
       const GeomDet* theDet = theGeomTracker->idToDet(theDetUnitId);
       std::cout << "Track/z/r after : "
 		<< (it->second).trackId() << " " 
 		<< theDet->surface().toGlobal((it->second).localPosition()).z() << " " 
 		<< theDet->surface().toGlobal((it->second).localPosition()).perp() << std::endl;
-      */
       // Keep only those hits that are on the physical volume of a module
       // (The other hits have been assigned a negative <double> value. 
-      if ( it->first > 0. ) c.push_back(it->second); 
+if ( it->first > 0. ) c.push_back(it->second); //!!
     }
   }
 
 }
+*/

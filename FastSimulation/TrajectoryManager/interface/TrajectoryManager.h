@@ -81,7 +81,8 @@ class TrajectoryManager
   /// Create a vector of PSimHits 
   void createPSimHits(const TrackerLayer& layer,
 		      const ParticlePropagator& P_before,
-		      std::map<double,PSimHit>& theHitMap,
+		      //std::map<double,PSimHit>& theHitMap,
+		      edm::PSimHitContainer * theHits,
 		      int trackID, int partID, const TrackerTopology *tTopo);
 
 /// Propagate the particle through the calorimeters
@@ -105,7 +106,9 @@ class TrajectoryManager
   void initializeTrackerGeometry(const TrackerGeometry* geomTracker);
 
   // load container from edm::Event
-  void loadSimHits(edm::PSimHitContainer & c) const;
+  //void loadSimHits(edm::PSimHitContainer & c) const;
+
+  std::auto_ptr<edm::PSimHitContainer> getPSimHits(){return thePSimHits;}
 
  private:
 
@@ -125,7 +128,8 @@ class TrajectoryManager
 
   /// and there
   void makePSimHits( const GeomDet* det, const TrajectoryStateOnSurface& ts,
-		     std::map<double,PSimHit>& theHitMap,
+		     //std::map<double,PSimHit>& theHitMap,
+		     edm::PSimHitContainer * theHits,
 		     int tkID, float el, float thick, int pID, const TrackerTopology *tTopo);
   /// and there
   std::pair<double,PSimHit> makeSinglePSimHit( const GeomDetUnit& det,
@@ -150,7 +154,7 @@ class TrajectoryManager
 
   double pTmin;
   bool firstLoop;
-  std::map<unsigned,std::map<double,PSimHit> > thePSimHits;
+  std::auto_ptr<edm::PSimHitContainer> thePSimHits;
 
   const TrackerGeometry*                      theGeomTracker;
   const GeometricSearchTracker*               theGeomSearchTracker;

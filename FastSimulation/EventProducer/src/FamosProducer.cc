@@ -95,8 +95,8 @@ void FamosProducer::produce(edm::Event & iEvent, const edm::EventSetup & es)
    std::auto_ptr<edm::SimTrackContainer> p1(new edm::SimTrackContainer);
    std::auto_ptr<edm::SimTrackContainer> m1(new edm::SimTrackContainer);
    std::auto_ptr<edm::SimVertexContainer> p2(new edm::SimVertexContainer);
-   std::auto_ptr<FSimVertexTypeCollection> v1(new FSimVertexTypeCollection);
-   std::auto_ptr<edm::PSimHitContainer> p3(new edm::PSimHitContainer);
+   //std::auto_ptr<FSimVertexTypeCollection> v1(new FSimVertexTypeCollection);
+   //std::auto_ptr<edm::PSimHitContainer> p3(new edm::PSimHitContainer);
    std::auto_ptr<edm::PCaloHitContainer> p4(new edm::PCaloHitContainer);
    std::auto_ptr<edm::PCaloHitContainer> p5(new edm::PCaloHitContainer);
    std::auto_ptr<edm::PCaloHitContainer> p6(new edm::PCaloHitContainer); 
@@ -106,7 +106,7 @@ void FamosProducer::produce(edm::Event & iEvent, const edm::EventSetup & es)
    fevt->load(*p1,*m1);
    fevt->load(*p2);
    fevt->load(*v1);
-   tracker->loadSimHits(*p3);
+   std::auto_ptr<edm::PSimHitContainer> p3 = tracker->getPSimHits();
 
 
    if ( calo ) {  
