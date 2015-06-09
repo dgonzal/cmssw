@@ -50,11 +50,9 @@ TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf):
     testPrimaryVertexCompatibility(false),
     primaryVertices(nullptr)
 {  
-    // The name of the TrajectorySeed Collection
     produces<TrajectorySeedCollection>();
-
-
-
+    produces<FastTMatchedRecHit2DCombinations>(); // TODO: turn into a vector of refs, or a value map
+    
     const edm::ParameterSet& simTrackSelectionConfig = conf.getParameter<edm::ParameterSet>("simTrackSelection");
     // The smallest pT,dxy,dz for a simtrack
     simTrack_pTMin = simTrackSelectionConfig.getParameter<double>("pTMin");
@@ -397,20 +395,19 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
     std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
     std::auto_ptr<FastTMatchedRecHit2DCombinations> outputCombinations{new FastTMatchedRecHit2DCombinations()};
 
-    for (unsigned int c=0; c < theRecHitCombinations->size(); ++c ){
+    for (const auto & theRecHitCombination : *theRecHitCombinations.product()){
       
-      const FastTMatchedRecHit2DCombination & theRecHitCombination = theRecHitCombinations->at(c);
       if(theRecHitCombination.size() ==0)
 	continue;
 
-      int currentSimTrackId = theRecHitCombination[0].get()->simtrackId1();
+      int simTrackId = theRecHitCombination[0].get()->simtrackId1();
 
-        if(skipSimTrackIds.find(currentSimTrackId)!=skipSimTrackIds.end())
+        if(skipSimTrackIds.find(simTrackId)!=skipSimTrackIds.end())
         {
             continue;
         }
 
-        const SimTrack& theSimTrack = (*theSimTracks)[currentSimTrackId];
+        const SimTrack& theSimTrack = (*theSimTracks)[simTrackId];
 
         int vertexIndex = theSimTrack.vertIndex();
         if (vertexIndex<0)
@@ -430,13 +427,11 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
         unsigned int layersCrossed=0;
 
         std::vector<TrajectorySeedHitCandidate> trackerRecHits;
-	for (unsigned int h=0; h < theRecHitCombination.size(); ++h){
-	  
-	  const SiTrackerGSMatchedRecHit2D& theRecHit = *theRecHitCombination[h];
+	for (const auto & theRecHit : theRecHitCombination){
 	  
 	  previousTrackerHit=currentTrackerHit;
 	  
-	  currentTrackerHit = TrajectorySeedHitCandidate(&theRecHit,trackerGeometry,trackerTopology);
+	  currentTrackerHit = TrajectorySeedHitCandidate(theRecHit.get(),trackerGeometry,trackerTopology);
 
             if (!currentTrackerHit.isOnTheSameLayer(previousTrackerHit))
             {
