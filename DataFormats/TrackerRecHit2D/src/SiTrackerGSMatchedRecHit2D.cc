@@ -52,6 +52,6 @@ bool SiTrackerGSMatchedRecHit2D::sharesInput( const TrackingRecHit* other,
    if(!otherCasted)
      return false;
    else
-     return Id_ == otherCasted->Id_;
+     return Id_ == otherCasted->Id_ && eeId_ == otherCasted->eeId_;
  }
  
