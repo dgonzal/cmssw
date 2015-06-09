@@ -618,25 +618,23 @@ void SiTrackerGaussianSmearingRecHitConverter::produce(edm::Event& e, const edm:
   for(unsigned int i=0; i<recHitCollectionMatched->size();i++) {
     recHitSimTrackIds.push_back(recHitCollectionMatched->at(i).simtrackId1());
   }
-
   
-
+  // create the combinations
+  edm::RefProd<FastTMatchedRecHit2DCollection> recHitCollectionMatched_handle  = e.getRefBeforePut<FastTMatchedRecHit2DCollection>();
+  size_t hitIndex = 0;
+  while(hitIndex!=recHitCollectionMatched->size()){
+    recHitCombinations->emplace_back(FastTMatchedRecHit2DCombination());
+    int currId = recHitCollectionMatched->at(hitIndex).simtrackId1();
+    for(;hitIndex < recHitCollectionMatched->size() 
+	  && recHitCollectionMatched->at(hitIndex).simtrackId1() == currId;
+	++hitIndex){
+      recHitCombinations->back().push_back(FastTMatchedRecHit2DRef(recHitCollectionMatched_handle,hitIndex));
+    }
+  }
+  
   // Step E: write output to file
   e.put(recHitCollection,"TrackerGSRecHits");
-  const edm::OrphanHandle<FastTMatchedRecHit2DCollection> recHitCollectionMatched_handle = e.put(recHitCollectionMatched,"TrackerGSMatchedRecHits");
-
-  
-  unsigned int i= 0;
-  while (i < recHitSimTrackIds.size() ){
-    FastTMatchedRecHit2DCombination currComb;
-    int currId = recHitSimTrackIds[i];
-    while( recHitSimTrackIds[i] == currId){
-      currComb.push_back(FastTMatchedRecHit2DRef(recHitCollectionMatched_handle,i));
-      i++;
-    }
-    recHitCombinations->push_back(currComb);
-    
-  }
+  e.put(recHitCollectionMatched,"TrackerGSMatchedRecHits");
   e.put(recHitCombinations); 
   
 }
