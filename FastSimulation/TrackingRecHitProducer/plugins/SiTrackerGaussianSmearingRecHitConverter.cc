@@ -395,9 +395,6 @@ void SiTrackerGaussianSmearingRecHitConverter::loadPixelData(
   std::string histName_i = histName + "_%u"; // needed to open histograms with a for
   if(!bigPixels)
     theMultiplicityCumulativeProbabilities.clear();
-  //
-  // What's this vector? Not needed - MG
-//  std::vector<double> mult; // vector with fixed multiplicity
   for(unsigned int i = 0; i<nMultiplicity; ++i) {
     TH1F addHist = *((TH1F*) pixelDataFile->Get( Form( histName_i.c_str() ,i+1 )));
     if(i==0) {
