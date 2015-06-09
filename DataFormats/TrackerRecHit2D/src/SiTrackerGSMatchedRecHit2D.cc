@@ -6,7 +6,6 @@ SiTrackerGSMatchedRecHit2D::SiTrackerGSMatchedRecHit2D( const LocalPoint& pos, c
 							const int simtrackId1,
 							const int simtrackId2,
 							const uint32_t eeId,
-							ClusterRef const&  cluster ,
 							const int pixelMultiplicityX = -1,
 							const int pixelMultiplicityY = -1, 
 							const bool isMatched = false,
@@ -17,7 +16,6 @@ SiTrackerGSMatchedRecHit2D::SiTrackerGSMatchedRecHit2D( const LocalPoint& pos, c
   simtrackId1_(simtrackId1) ,
   simtrackId2_(simtrackId2) ,
   eeId_(eeId) ,
-  cluster_(cluster), 
   pixelMultiplicityAlpha_(pixelMultiplicityX), 
   pixelMultiplicityBeta_(pixelMultiplicityY), 
   isMatched_(isMatched), 
@@ -31,7 +29,6 @@ SiTrackerGSMatchedRecHit2D::SiTrackerGSMatchedRecHit2D( const LocalPoint& pos, c
 							const int simtrackId1,
 							const int simtrackId2,
 							const uint32_t eeId,
-							ClusterRef const&  cluster ,
 							const int pixelMultiplicityX = -1,
 							const int pixelMultiplicityY = -1):
   GSSiTrackerRecHit2DLocalPos(pos,err,idet) ,
@@ -39,7 +36,6 @@ SiTrackerGSMatchedRecHit2D::SiTrackerGSMatchedRecHit2D( const LocalPoint& pos, c
   simtrackId1_(simtrackId1) , 
   simtrackId2_(simtrackId2) ,
   eeId_(eeId) ,
-  cluster_(cluster),
   pixelMultiplicityAlpha_(pixelMultiplicityX), 
   pixelMultiplicityBeta_(pixelMultiplicityY), 
   isMatched_(0), 
@@ -50,13 +46,12 @@ SiTrackerGSMatchedRecHit2D::SiTrackerGSMatchedRecHit2D( const LocalPoint& pos, c
 
 
 bool SiTrackerGSMatchedRecHit2D::sharesInput( const TrackingRecHit* other, 
-					    SharedInputType what) const
+					      SharedInputType what) const
  {
-   if (geographicalId() != other->geographicalId()) return false;
-   if(! other->isValid()) return false;
-
-   //const SiTrackerGSMatchedRecHit2D* otherCast = static_cast<const SiTrackerGSMatchedRecHit2D*>(other);
-   //return cluster_ == otherCast->cluster();
-   return this->geographicalId() == other->geographicalId() ;
+   const SiTrackerGSMatchedRecHit2D * otherCasted = dynamic_cast<const SiTrackerGSMatchedRecHit2D*>(other);
+   if(!otherCasted)
+     return false;
+   else
+     return Id_ == otherCasted->Id_;
  }
  

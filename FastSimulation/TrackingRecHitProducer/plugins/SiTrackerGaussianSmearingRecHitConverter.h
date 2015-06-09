@@ -19,7 +19,6 @@
 
 // Data Formats
 #include "SimDataFormats/CrossingFrame/interface/MixCollection.h"
-#include "FastSimDataFormats/External/interface/FastTrackerClusterCollection.h"
 #include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2DCollection.h"
 #include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2DCollection.h"
 #include "DataFormats/GeometryVector/interface/Point3DBase.h"
@@ -66,7 +65,6 @@ class SiTrackerGaussianSmearingRecHitConverter : public edm::stream::EDProducer 
   void smearHits(const edm::PSimHitContainer& input,
   //  void smearHits(edm::Handle<std::vector<PSimHit> >& input,
                  std::map<unsigned, edm::OwnVector<SiTrackerGSRecHit2D> >& theRecHits,
-		 std::map<unsigned, edm::OwnVector<FastTrackerCluster> >& theClusters,
 		 const TrackerTopology *tTopo,
                  RandomEngineAndDistribution const*);
 
@@ -83,9 +81,6 @@ class SiTrackerGaussianSmearingRecHitConverter : public edm::stream::EDProducer 
   void loadMatchedRecHits(std::map<unsigned,edm::OwnVector<SiTrackerGSMatchedRecHit2D> >& theRecHits, 
 			  FastTMatchedRecHit2DCollection & theRecHitCollection) const;
 
-  void loadClusters(std::map<unsigned,edm::OwnVector<FastTrackerCluster> >& theClusterMap, 
-                    FastTrackerClusterCollection& theClusterCollection) const;
-  
   private:
   //
   bool gaussianSmearing(const PSimHit& simHit, 
@@ -247,11 +242,6 @@ class SiTrackerGaussianSmearingRecHitConverter : public edm::stream::EDProducer 
   //  typedef MixCollection<PSimHit>::iterator SimHiterator;
   typedef edm::PSimHitContainer::const_iterator SimHiterator;
   std::vector<SimHiterator> correspondingSimHit;
-
-  typedef SiTrackerGSRecHit2D::ClusterRef ClusterRef;
-  typedef SiTrackerGSRecHit2D::ClusterRefProd ClusterRefProd;
-  // Added for cluster reference
-  ClusterRefProd FastTrackerClusterRefProd;
 
 };
 

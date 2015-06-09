@@ -5,9 +5,6 @@
  * History: Sep 27, 2006 -  initial version
  * --------------------------------------------------------------
  */
-//PAT
-//FastTrackerCluster
-#include "FastSimDataFormats/External/interface/FastTrackerCluster.h"
 
 // SiTracker Gaussian Smearing
 #include "SiTrackerGaussianSmearingRecHitConverter.h"
@@ -80,11 +77,6 @@ SiTrackerGaussianSmearingRecHitConverter::SiTrackerGaussianSmearingRecHitConvert
   std::cout << "SiTrackerGaussianSmearingRecHitConverter instantiated" << std::endl;
 #endif
 
-
-
-
-  //PAT
-  produces<FastTrackerClusterCollection>("TrackerClusters");
   produces<SiTrackerGSRecHit2DCollection>("TrackerGSRecHits");
   produces<FastTMatchedRecHit2DCollection>("TrackerGSMatchedRecHits");
   produces<FastTMatchedRecHit2DCombinations>();
@@ -112,10 +104,6 @@ SiTrackerGaussianSmearingRecHitConverter::SiTrackerGaussianSmearingRecHitConvert
   std::cout << (useCMSSWPixelParameterization? "CMSSW" : "ORCA") << " pixel parametrization chosen in config file." << std::endl;
 #endif
 
-  //Clusters
-  GevPerElectron =  conf.getParameter<double>("GevPerElectron");
-  ElectronsPerADC =  conf.getParameter<double>("ElectronsPerADC");
-  
   //
   // TIB
   localPositionResolution_TIB1x = conf.getParameter<double>("TIB1x");
@@ -601,40 +589,18 @@ void SiTrackerGaussianSmearingRecHitConverter::produce(edm::Event& e, const edm:
   es.get<TrackerTopologyRcd>().get(tTopoHand);
   const TrackerTopology *tTopo=tTopoHand.product();
 
-
-
-
-  // Step 0: Declare Ref and RefProd
-  FastTrackerClusterRefProd = e.getRefBeforePut<FastTrackerClusterCollection>("TrackerClusters");
-  
   // Step A: Get Inputs (PSimHit's)
-  /*
-  edm::Handle<CrossingFrame<PSimHit> > cf_simhit; 
-  std::vector<const CrossingFrame<PSimHit> *> cf_simhitvec;
-  for(uint32_t i=0; i<trackerContainers.size(); i++){
-    e.getByLabel(trackerContainers[i], cf_simhit);
-    cf_simhitvec.push_back(cf_simhit.product());
-  }
-  std::auto_ptr<MixCollection<PSimHit> > allTrackerHits(new MixCollection<PSimHit>(cf_simhitvec));
-  */
-
   edm::Handle<edm::PSimHitContainer> allTrackerHits_handle;
   e.getByToken(simHitToken,allTrackerHits_handle);
   const edm::PSimHitContainer& allTrackerHits=*allTrackerHits_handle;
 
   // Step B: create temporary RecHit collection and fill it with Gaussian smeared RecHit's
-
- 
   std::map<unsigned, edm::OwnVector<SiTrackerGSRecHit2D> > temporaryRecHits;
-  std::map<unsigned, edm::OwnVector<FastTrackerCluster> > theClusters ;
+  smearHits( allTrackerHits, temporaryRecHits, tTopo, &random);
  
-  smearHits( allTrackerHits, temporaryRecHits, theClusters, tTopo, &random);
- 
-
- // Step C: match rechits on stereo layers
+  // Step C: match rechits on stereo layers
   std::map<unsigned, edm::OwnVector<SiTrackerGSMatchedRecHit2D> > temporaryMatchedRecHits ;
   if(doMatching)  matchHits(  temporaryRecHits,  temporaryMatchedRecHits);//, allTrackerHits);
-
 
   // Step D: from the temporary RecHit collection, create the real one.
   std::auto_ptr<FastTRecHit2DCollection> recHitCollection(new FastTRecHit2DCollection);  
@@ -676,11 +642,6 @@ void SiTrackerGaussianSmearingRecHitConverter::produce(edm::Event& e, const edm:
   }
   e.put(recHitCombinations); 
   
-  
-  //STEP F: write clusters
-  std::auto_ptr<FastTrackerClusterCollection> clusterCollection(new FastTrackerClusterCollection);
-  loadClusters(theClusters, *clusterCollection);
-  e.put(clusterCollection,"TrackerClusters");
 }
 
 
@@ -688,7 +649,6 @@ void SiTrackerGaussianSmearingRecHitConverter::produce(edm::Event& e, const edm:
 //void SiTrackerGaussianSmearingRecHitConverter::smearHits(MixCollection<PSimHit>& input, 
 void SiTrackerGaussianSmearingRecHitConverter::smearHits(const edm::PSimHitContainer& input,
 							 std::map<unsigned, edm::OwnVector<SiTrackerGSRecHit2D> >& temporaryRecHits,					
-							 std::map<unsigned, edm::OwnVector<FastTrackerCluster> >& theClusters,
 							 const TrackerTopology *tTopo,
                                                          RandomEngineAndDistribution const* random)
 {
@@ -812,39 +772,13 @@ void SiTrackerGaussianSmearingRecHitConverter::smearHits(const edm::PSimHitConta
 			     error.xy()+lape.xy(),
 			     error.yy()+lape.yy() );
 
-      float chargeADC = (*isim).energyLoss()/(GevPerElectron * ElectronsPerADC);
 
-      //create cluster
-      if(subdet > 2) theClusters[trackID].push_back(
-						    new FastTrackerCluster(LocalPoint(position.x(), 0.0, 0.0), error, det,
-									   simHitCounter,
-									   trackID,
-									   eeID,
-									   //(*isim).energyLoss())
-									   chargeADC)
-						    );
-      else theClusters[trackID].push_back(
-					  new FastTrackerCluster(position, error, det,
-								 simHitCounter,
-								 trackID,
-								 eeID,
-								 //(*isim).energyLoss())
-								 chargeADC)
-					  );
-    
-      //       std::cout << "CLUSTER for simhit " << simHitCounter << "\t energy loss = " <<chargeADC << std::endl;
-      
-      // std::cout << "Error as reconstructed " << error.xx() << " " << error.xy() << " " << error.yy() << std::endl;
-      
-    
-      
 
 
   // create rechit
   temporaryRecHits[trackID].push_back(
 				      new SiTrackerGSRecHit2D(position, error, theDetUnit, -1, trackID, -1,
 							      eeID, 
-							      ClusterRef(FastTrackerClusterRefProd, simHitCounter),
 							      alphaMult, betaMult)
 				      );
   
@@ -1229,22 +1163,6 @@ bool SiTrackerGaussianSmearingRecHitConverter::gaussianSmearing(const PSimHit& s
 }   
 
 
-
-void 
-    SiTrackerGaussianSmearingRecHitConverter::loadClusters(
-    std::map<unsigned,edm::OwnVector<FastTrackerCluster> >& theClusterMap, 
-    FastTrackerClusterCollection& theClusterCollection) const
-{
-  std::map<unsigned,edm::OwnVector<FastTrackerCluster> >::const_iterator 
-      it = theClusterMap.begin();
-  std::map<unsigned,edm::OwnVector<FastTrackerCluster> >::const_iterator 
-      lastCluster = theClusterMap.end();
-  
-  for( ; it != lastCluster ; ++it ) { 
-    theClusterCollection.put(it->first,(it->second).begin(),(it->second).end());
-  }
-}
-
 void
 SiTrackerGaussianSmearingRecHitConverter::loadRecHits(
 						      std::map<unsigned,edm::OwnVector<SiTrackerGSRecHit2D> >& theRecHits, 
@@ -1419,7 +1337,6 @@ SiTrackerGaussianSmearingRecHitConverter::matchHits(
 	  SiTrackerGSMatchedRecHit2D* rit_copy = new SiTrackerGSMatchedRecHit2D(rit->localPosition(), rit->localPositionError(),
 										*rit->det(),-1,
 										rit->simtrackId1(), rit->simtrackId2(), rit->eeId(),
-                                                                                rit->cluster(),
                                                                                 rit->simMultX(), rit->simMultY()); 
 	  //std::cout << "Simple hit  hit: isMatched =\t" << rit_copy->isMatched() << ", "
 	  //    <<  rit_copy->monoHit() << ", " <<  rit_copy->stereoHit() << std::endl;
@@ -1434,7 +1351,6 @@ SiTrackerGaussianSmearingRecHitConverter::matchHits(
 	SiTrackerGSMatchedRecHit2D* rit_copy = new SiTrackerGSMatchedRecHit2D(rit->localPosition(), rit->localPositionError(),
 									      *rit->det(), -1, 
 									      rit->simtrackId1(),rit->simtrackId2(), rit->eeId(), 
-                                                                              rit->cluster(),
 									      rit->simMultX(), rit->simMultY());	
 	
 	//std::cout << "Simple hit  hit: isMatched =\t" << rit_copy->isMatched() << ", "
