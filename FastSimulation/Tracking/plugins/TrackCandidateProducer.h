@@ -44,8 +44,6 @@ class TrackCandidateProducer : public edm::stream::EDProducer <>
   
  private:
 
-  void addHits(const TrajectorySeedHitCandidate&, std::vector<TrajectorySeedHitCandidate>&);
-  void removeHits(const TrajectorySeedHitCandidate&, std::vector<TrajectorySeedHitCandidate>&);  
   const TrackerGeometry*  theGeometry;
   const MagneticField*  theMagField;
   const TrackerTopology * theTTopo;

@@ -19,7 +19,6 @@
 #include "Geometry/Records/interface/TrackerTopologyRcd.h"
 
 #include "FastSimulation/Tracking/interface/TrajectorySeedHitCandidate.h"
-//#include "FastSimulation/Tracking/interface/TrackerRecHitSplit.h"
 
 #include <vector>
 
@@ -87,25 +86,17 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
   // The produced objects
   std::auto_ptr<TrackCandidateCollection> output(new TrackCandidateCollection);    
   
-  // Get the seeds
+  // Get the seeds and the corresponding rechit combinations
   edm::Handle<edm::View<TrajectorySeed> > theSeedCollection;
   e.getByToken(seedCollectionToken,theSeedCollection);
-
-  // No seed -> output an empty track collection
-  if(theSeedCollection->size() == 0) {
-    e.put(output);
-    return;
-  }
-
+  edm::Handle<FastTMatchedRecHit2DCombinations> theRecHitCombinations;
+  e.getByToken(recHitCombinationsToken, theRecHitCombinations);
 
   // SimTracks, SimVertices and RecHitCombinations
   edm::Handle<edm::SimVertexContainer> theSimVtxCollection;
   e.getByToken(simVtxCollectionToken,theSimVtxCollection);
   edm::Handle<edm::SimTrackContainer> theSimTkCollection;
   e.getByToken(simTkCollectionToken,theSimTkCollection);
-  edm::Handle<FastTMatchedRecHit2DCombinations> theRecHitCombinations;
-  e.getByToken(recHitCombinationsToken, theRecHitCombinations);
-
       
   // Produce a trackcandidate for each given seed
   for (unsigned seednr = 0; seednr < theSeedCollection->size(); ++seednr){
@@ -115,25 +106,19 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 
     // get the list of hits from which to produce the TrackCandidate
     std::vector<TrajectorySeedHitCandidate> theTrackerRecHits;
-    TrajectorySeedHitCandidate theCurrentRecHit, thePreviousRecHit;
-    for (unsigned h_rechit=0; h_rechit < theRecHitCombination.size(); ++h_rechit){
+    TrajectorySeedHitCandidate _recHit;
+    for (const auto & recHit : theRecHitCombination){
 
-      theCurrentRecHit = TrajectorySeedHitCandidate(theRecHitCombination[h_rechit].get(),theGeometry,theTTopo);
+      _recHit = TrajectorySeedHitCandidate(recHit.get(),theGeometry,theTTopo);
     
-      if ( !rejectOverlaps || 
-	   h_rechit == 0 || 
-	   theCurrentRecHit.subDetId()    != thePreviousRecHit.subDetId() || 
-	   theCurrentRecHit.layerNumber() != thePreviousRecHit.layerNumber() ) {  
-	addHits(theCurrentRecHit,theTrackerRecHits);       // insert the current hit
-	thePreviousRecHit = theCurrentRecHit;
-      } 
-      else if ( theCurrentRecHit.localError() < thePreviousRecHit.localError() ) { 
-	removeHits(thePreviousRecHit,theTrackerRecHits);   // get rid of the previous hit
-	addHits(theCurrentRecHit,theTrackerRecHits);       // insert instead the current hit
-	thePreviousRecHit = theCurrentRecHit;
-      } 
-      else {	  
-	theCurrentRecHit = thePreviousRecHit;              // skip the current hit
+      if ( !rejectOverlaps ||                                                       // if we don't care about multiple hits on same layer
+	   theTrackerRecHits.size() == 0 ||                                         //    or if there is no privious hit
+	   _recHit.subDetId()    != theTrackerRecHits.back().subDetId() ||          //    or if the previous hit was not on the same layer
+	   _recHit.layerNumber() != theTrackerRecHits.back().layerNumber() ) {  
+	theTrackerRecHits.push_back(_recHit);                                       //    push back the hit
+      }
+      else if ( _recHit.localError() < theTrackerRecHits.back().localError() ) {    // else, if the previous hit was less precise, 
+	theTrackerRecHits.back() = _recHit;                                         // 	  replace it with the current hit
       }
     }
     
@@ -141,35 +126,34 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     edm::OwnVector<TrackingRecHit> recHits;
     unsigned nTrackerHits = theTrackerRecHits.size();
     recHits.reserve(nTrackerHits); 
-    for ( unsigned ih=0; ih<nTrackerHits; ++ih ) {
-      TrackingRecHit* aTrackingRecHit = theTrackerRecHits[ih].hit()->clone();
-      recHits.push_back(aTrackingRecHit);
+    for ( const auto & _recHit : theTrackerRecHits ) {
+      // unmatch hits if requested
+      if(splitHits &&  _recHit.matchedHit()->isMatched()){
+	// we assume the hits are matched in the correct order...
+	recHits.push_back(_recHit.matchedHit()->monoHit()->clone());
+	recHits.push_back(_recHit.matchedHit()->stereoHit()->clone());
+      }
+      else{
+	recHits.push_back(_recHit.hit()->clone());
+      }
     }
-
-    // find the SimTrack that corresponds to the RecHitCombination
+    
+    // calculate initial parameters for the trajectory based on truth information
     const SimTrack & simTk = theSimTkCollection->at(theRecHitCombination[0].get()->simtrackId1());
-
-    // find the corresponding SimVertex
     const SimVertex & simVtx = theSimVtxCollection->at(simTk.vertIndex());
-
-    //   a) origin vertex
     GlobalPoint position(simVtx.position().x(), simVtx.position().y(), simVtx.position().z());
-
-    //   b) initial momentum
     GlobalVector momentum( simTk.momentum().x(), simTk.momentum().y(), simTk.momentum().z());
-
-    //   c) electric charge
     float        charge   = simTk.charge();
-
-    //  -> inital parameters
     GlobalTrajectoryParameters initialParams(position,momentum,(int)charge,theMagField);
 
-    //  -> large initial errors
+    // set large initial errors
     AlgebraicSymMatrix55 errorMatrix= AlgebraicMatrixID();    
     CurvilinearTrajectoryError initialError(errorMatrix);
 
     // -> initial state
     FreeTrajectoryState initialFTS(initialParams, initialError);      
+
+    // and fit
     const GeomDet* initialLayer = theGeometry->idToDet(recHits.front().geographicalId());  
     const TrajectoryStateOnSurface initialTSOS = thePropagator->propagate(initialFTS,initialLayer->surface()) ;
     if (!initialTSOS.isValid()) continue;       
@@ -181,35 +165,4 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 
   // Save the track candidates
   e.put(output);
-}
-
-
-void TrackCandidateProducer::addHits(const TrajectorySeedHitCandidate& theCurrentRecHit,
-				     std::vector<TrajectorySeedHitCandidate>& theTrackerRecHits ){
-  if (splitHits && theCurrentRecHit.matchedHit()->isMatched()){
-      const SiTrackerGSRecHit2D* mHit = theCurrentRecHit.matchedHit()->monoHit();
-      const SiTrackerGSRecHit2D* sHit = theCurrentRecHit.matchedHit()->stereoHit();
-      
-      // Add the new hits
-      //  if( mHit->simhitId() < sHit->simhitId() ) {
-	
-	theTrackerRecHits.push_back(TrajectorySeedHitCandidate(mHit,theCurrentRecHit));
-	theTrackerRecHits.push_back(TrajectorySeedHitCandidate(sHit,theCurrentRecHit));
-	
-	//  } else {
-	
-	//	theTrackerRecHits.push_back(TrajectorySeedHitCandidate(sHit,theCurrentRecHit));
-	//	theTrackerRecHits.push_back(TrajectorySeedHitCandidate(mHit,theCurrentRecHit));
-	
-	//  }
-  }
-  else
-    theTrackerRecHits.push_back(theCurrentRecHit);
-}
-
-
-void TrackCandidateProducer::removeHits(const TrajectorySeedHitCandidate& thePreviousRecHit,
-				     std::vector<TrajectorySeedHitCandidate>& theTrackerRecHits ){
-  theTrackerRecHits.pop_back();
-  if ( splitHits && thePreviousRecHit.matchedHit()->isMatched() ) theTrackerRecHits.pop_back();
 }
