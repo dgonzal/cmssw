@@ -90,7 +90,7 @@ TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf):
     }
     
     // The name of the hit producer
-    edm::InputTag recHitCombinationsTag = conf.getParameter<edm::InputTag>("recHitCombinations");
+    edm::InputTag recHitCombinationsTag = conf.getParameter<edm::InputTag>("src");
     recHitCombinationsToken = consumes<FastTMatchedRecHit2DCombinations>(recHitCombinationsTag);
 
     // read Layers

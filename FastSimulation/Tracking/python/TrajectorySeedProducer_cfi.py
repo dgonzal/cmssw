@@ -1,15 +1,16 @@
 import FWCore.ParameterSet.Config as cms
 
-trajectorySeedProducer = cms.EDProducer("TrajectorySeedProducer",
-                                        
+trajectorySeedProducer = cms.EDProducer(
+    "TrajectorySeedProducer",
+    
     simTrackSelection = cms.PSet(
-         # The smallest pT (in GeV) to create a track candidate 
-         pTMin = cms.double(-1),
+        # The smallest pT (in GeV) to create a track candidate 
+        pTMin = cms.double(-1),
          # skip SimTracks processed in previous iterations
-         skipSimTrackIds = cms.VInputTag(),
-         maxZ0 = cms.double(-1),
-         maxD0 = cms.double(-1),
-    ),
+        skipSimTrackIds = cms.VInputTag(),
+        maxZ0 = cms.double(-1),
+        maxD0 = cms.double(-1),
+        ),
     # minimum number of layer crossed (with hits on them) by the simtrack
     minLayersCrossed = cms.uint32(0),
     
@@ -25,8 +26,8 @@ trajectorySeedProducer = cms.EDProducer("TrajectorySeedProducer",
     ptMin = cms.double(-1),
 
     # Inputs: tracker rechits, beam spot position.
-    recHits = cms.InputTag("siTrackerGaussianSmearingRecHits","TrackerGSMatchedRecHits"),
-
+    src = cms.InputTag("siTrackerGaussianSmearingRecHits"),
+                                        
     layerList = cms.vstring(),
-)
+    )
 

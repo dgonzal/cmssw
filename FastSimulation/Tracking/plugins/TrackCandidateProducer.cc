@@ -9,8 +9,8 @@
 
 #include "DataFormats/Common/interface/Handle.h"
 #include "DataFormats/Common/interface/OwnVector.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2DCollection.h" 
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2DCollection.h" 
+#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2D.h" 
+#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2D.h" 
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/TrackReco/interface/TrackExtraFwd.h"
 
@@ -43,7 +43,7 @@ TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf)
   produces<TrackCandidateCollection>();
   
   // input tags
-  edm::InputTag seedProducerLabel = conf.getParameter<edm::InputTag>("SeedProducer");
+  edm::InputTag seedProducerLabel = conf.getParameter<edm::InputTag>("src");
   edm::InputTag simTkProducerLabel = conf.getParameter<edm::InputTag>("SimTracks");
 
   // Reject overlapping hits?

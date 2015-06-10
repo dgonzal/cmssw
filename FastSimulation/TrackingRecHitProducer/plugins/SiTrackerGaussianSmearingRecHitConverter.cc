@@ -77,8 +77,8 @@ SiTrackerGaussianSmearingRecHitConverter::SiTrackerGaussianSmearingRecHitConvert
   std::cout << "SiTrackerGaussianSmearingRecHitConverter instantiated" << std::endl;
 #endif
 
-  produces<SiTrackerGSRecHit2DCollection>("TrackerGSRecHits");
-  produces<FastTMatchedRecHit2DCollection>("TrackerGSMatchedRecHits");
+  produces<FastTRecHit2DCollection>();
+  produces<FastTMatchedRecHit2DCollection>();
   produces<FastTMatchedRecHit2DCombinations>();
   //--- PSimHit Containers
   //  trackerContainers.clear();
@@ -633,8 +633,8 @@ void SiTrackerGaussianSmearingRecHitConverter::produce(edm::Event& e, const edm:
   }
   
   // Step E: write output to file
-  e.put(recHitCollection,"TrackerGSRecHits");
-  e.put(recHitCollectionMatched,"TrackerGSMatchedRecHits");
+  e.put(recHitCollection);
+  e.put(recHitCollectionMatched);
   e.put(recHitCombinations); 
   
 }
