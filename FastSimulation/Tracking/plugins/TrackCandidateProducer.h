@@ -44,14 +44,11 @@ class TrackCandidateProducer : public edm::stream::EDProducer <>
   
  private:
 
-  const TrackerGeometry*  theGeometry;
-  const MagneticField*  theMagField;
-  const TrackerTopology * theTTopo;
   std::shared_ptr<PropagatorWithMaterial> thePropagator;
 
   bool rejectOverlaps;
   bool splitHits;
- 
+  
   // tokens
   edm::EDGetTokenT<TrajectorySeedCollection> seedCollectionToken;
   edm::EDGetTokenT<FastTMatchedRecHit2DCombinations> recHitCombinationsToken;

@@ -62,41 +62,38 @@ TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf)
  
 void 
 TrackCandidateProducer::beginRun(edm::Run const&, const edm::EventSetup & es) {
-
-  //services
-  edm::ESHandle<MagneticField>          magField;
-  edm::ESHandle<TrackerGeometry>        geometry;
-  edm::ESHandle<TrackerTopology>        tTopo;
-
-  es.get<IdealMagneticFieldRecord>().get(magField);
-  es.get<TrackerDigiGeometryRecord>().get(geometry);
-  es.get<IdealGeometryRecord>().get(tTopo);
-
-  theMagField = &(*magField);
-  theGeometry = &(*geometry);
-  theTTopo = &(*tTopo);
-
-  // TODO: get the propagator from the event
-  thePropagator = std::make_shared<PropagatorWithMaterial>(alongMomentum,0.105,theMagField);
 }
 
 void 
 TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {        
 
-  // The produced objects
-  std::auto_ptr<TrackCandidateCollection> output(new TrackCandidateCollection);    
+  //services
+  edm::ESHandle<MagneticField>          magField;
+  es.get<IdealMagneticFieldRecord>().get(magField);
+
+  edm::ESHandle<TrackerGeometry>        geometry;
+  es.get<TrackerDigiGeometryRecord>().get(geometry);
+
+  edm::ESHandle<TrackerTopology> tTopo;
+  es.get<IdealGeometryRecord>().get(tTopo);
+
+  // TODO: get the propagator from the event setup
+  thePropagator = std::make_shared<PropagatorWithMaterial>(alongMomentum,0.105,magField.product());
   
-  // Get the seeds and the corresponding rechit combinations
-  edm::Handle<edm::View<TrajectorySeed> > theSeedCollection;
+  // the source
+  edm::Handle<TrajectorySeedCollection> theSeedCollection;
   e.getByToken(seedCollectionToken,theSeedCollection);
   edm::Handle<FastTMatchedRecHit2DCombinations> theRecHitCombinations;
   e.getByToken(recHitCombinationsToken, theRecHitCombinations);
 
-  // SimTracks, SimVertices and RecHitCombinations
+  // SimTracks, SimVertices
   edm::Handle<edm::SimVertexContainer> theSimVtxCollection;
   e.getByToken(simVtxCollectionToken,theSimVtxCollection);
   edm::Handle<edm::SimTrackContainer> theSimTkCollection;
   e.getByToken(simTkCollectionToken,theSimTkCollection);
+
+  // The produced objects
+  std::auto_ptr<TrackCandidateCollection> output(new TrackCandidateCollection);    
       
   // Produce a trackcandidate for each given seed
   for (unsigned seednr = 0; seednr < theSeedCollection->size(); ++seednr){
@@ -109,7 +106,7 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     TrajectorySeedHitCandidate _recHit;
     for (const auto & recHit : theRecHitCombination){
 
-      _recHit = TrajectorySeedHitCandidate(recHit.get(),theGeometry,theTTopo);
+      _recHit = TrajectorySeedHitCandidate(recHit.get(),geometry.product(),tTopo.product());
     
       if ( !rejectOverlaps ||                                                       // if we don't care about multiple hits on same layer
 	   theTrackerRecHits.size() == 0 ||                                         //    or if there is no privious hit
@@ -144,7 +141,7 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     GlobalPoint position(simVtx.position().x(), simVtx.position().y(), simVtx.position().z());
     GlobalVector momentum( simTk.momentum().x(), simTk.momentum().y(), simTk.momentum().z());
     float        charge   = simTk.charge();
-    GlobalTrajectoryParameters initialParams(position,momentum,(int)charge,theMagField);
+    GlobalTrajectoryParameters initialParams(position,momentum,(int)charge,magField.product());
 
     // set large initial errors
     AlgebraicSymMatrix55 errorMatrix= AlgebraicMatrixID();    
@@ -154,13 +151,13 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     FreeTrajectoryState initialFTS(initialParams, initialError);      
 
     // and fit
-    const GeomDet* initialLayer = theGeometry->idToDet(recHits.front().geographicalId());  
+    const GeomDet* initialLayer = geometry->idToDet(recHits.front().geographicalId());  
     const TrajectoryStateOnSurface initialTSOS = thePropagator->propagate(initialFTS,initialLayer->surface()) ;
     if (!initialTSOS.isValid()) continue;       
     PTrajectoryStateOnDet PTSOD = trajectoryStateTransform::persistentState(initialTSOS,recHits.front().geographicalId().rawId()); 
     
     // add a new track candidate to the list
-    output->push_back(TrackCandidate(recHits,theSeedCollection->at(seednr),PTSOD,edm::RefToBase<TrajectorySeed>(theSeedCollection,seednr)));
+    output->push_back(TrackCandidate(recHits,theSeedCollection->at(seednr),PTSOD,edm::RefToBase<TrajectorySeed>(edm::Ref<TrajectorySeedCollection>(theSeedCollection,seednr))));
   }
 
   // Save the track candidates
