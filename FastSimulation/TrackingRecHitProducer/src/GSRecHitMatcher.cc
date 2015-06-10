@@ -124,7 +124,7 @@ SiTrackerGSMatchedRecHit2D * GSRecHitMatcher::match(const SiTrackerGSRecHit2D *m
 								    );
     
     SiTrackerGSMatchedRecHit2D *rV= new SiTrackerGSMatchedRecHit2D(position, error, *gluedDet,
-								   monoRH->Id(),
+								   -1,
 								   monoRH->simtrackId1(),								  
 								   monoRH->simtrackId2(), monoRH->eeId(), 
 								   monoRH->simMultX(), monoRH->simMultY(), 
@@ -220,7 +220,7 @@ SiTrackerGSMatchedRecHit2D * GSRecHitMatcher::projectOnly( const SiTrackerGSRecH
   if ((isMono && isStereo)||(!isMono&&!isStereo)) throw cms::Exception("GSRecHitMatcher") << "Something wrong with DetIds.";
   else if (isMono) {
     SiTrackerGSMatchedRecHit2D *rV= new SiTrackerGSMatchedRecHit2D(projectedHitPos, rotatedError, *gluedDet,
-								   monoRH->Id(),
+								   -1,
 								   monoRH->simtrackId1(),
 								   monoRH->simtrackId2(), monoRH->eeId(),
 								   monoRH->simMultX(), monoRH->simMultY(), false, adjustedRH, otherRH);
@@ -231,7 +231,7 @@ SiTrackerGSMatchedRecHit2D * GSRecHitMatcher::projectOnly( const SiTrackerGSRecH
   
   else{
     SiTrackerGSMatchedRecHit2D *rV=new SiTrackerGSMatchedRecHit2D(projectedHitPos, rotatedError, *gluedDet,
-								  monoRH->Id(),
+								  -1,
 								  monoRH->simtrackId1(),
 								  monoRH->simtrackId2(), monoRH->eeId(),
 								  monoRH->simMultX(), monoRH->simMultY(), false, otherRH, adjustedRH);
