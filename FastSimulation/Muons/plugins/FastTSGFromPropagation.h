@@ -23,8 +23,8 @@
 
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 #include "MagneticField/Engine/interface/MagneticField.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2DCollection.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2DCollection.h"
+#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2D.h"
+#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2D.h"
 #include "SimDataFormats/Track/interface/SimTrackContainer.h"
 
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHitBuilder.h"
@@ -171,13 +171,13 @@ private:
 
   const edm::ParameterSet theConfig;
   edm::EDGetTokenT<edm::SimTrackContainer> theSimTrackCollectionToken_;
-  edm::EDGetTokenT<SiTrackerGSMatchedRecHit2DCollection>  theHitProducer;
+  edm::EDGetTokenT<FastTMatchedRecHit2DCombinations> recHitCombinationsToken;
   edm::EDGetTokenT<reco::BeamSpot> beamSpot_;
   edm::EDGetTokenT<MeasurementTrackerEvent> theMeasurementTrackerEventToken_;
 
   edm::Handle<reco::BeamSpot> theBeamSpot;
   edm::Handle<edm::SimTrackContainer> theSimTracks;
-  edm::Handle<SiTrackerGSMatchedRecHit2DCollection> theGSRecHits;
+  edm::Handle<FastTMatchedRecHit2DCombinations> recHitCombinations;
   edm::Handle<MeasurementTrackerEvent> theMeasTrackerEvent;
   edm::ESHandle<TransientTrackingRecHitBuilder> theTTRHBuilder;
 

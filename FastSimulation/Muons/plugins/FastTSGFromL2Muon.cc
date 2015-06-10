@@ -1,7 +1,7 @@
 #include "FWCore/Framework/interface/Event.h"
 
 #include "DataFormats/MuonSeed/interface/L3MuonTrajectorySeedCollection.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2DCollection.h" 
+#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2D.h" 
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/Math/interface/deltaPhi.h"
 
