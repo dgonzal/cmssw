@@ -82,7 +82,7 @@ class TrajectorySeed {
   virtual TrajectorySeed * clone() const {return new TrajectorySeed( * this); }
 
   void setCombinationIndex(int i){combinationIndex_ = i;}
-  int getCombinationIndex(){return combinationIndex_;}
+  int getCombinationIndex() const {return combinationIndex_;}
  
  private:
   edm::OwnVector<TrackingRecHit> hits_;
