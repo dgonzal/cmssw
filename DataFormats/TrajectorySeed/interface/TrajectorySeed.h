@@ -81,11 +81,14 @@ class TrajectorySeed {
 
   virtual TrajectorySeed * clone() const {return new TrajectorySeed( * this); }
 
+  void setCombinationIndex(int i){combinationIndex_ = i;}
+  int getCombinationIndex(){return combinationIndex_;}
  
  private:
   edm::OwnVector<TrackingRecHit> hits_;
   PTrajectoryStateOnDet tsos_;
   PropagationDirection dir_;
+  int combinationIndex_; // a FastSim variable
 };
 
 inline void swap(TrajectorySeed & rh, TrajectorySeed & lh) noexcept { 
