@@ -30,6 +30,7 @@
 
 //Propagator withMaterial
 #include "TrackingTools/MaterialEffects/interface/PropagatorWithMaterial.h"
+#include "TrackingTools/Records/interface/TrackingComponentsRecord.h"
 
 #include "FastSimulation/Tracking/plugins/SimTrackIdProducer.h"
 
@@ -41,10 +42,6 @@ template class SeedingTree<TrackingLayer>;
 template class SeedingNode<TrackingLayer>;
 
 TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf):
-    magneticField(nullptr),
-    magneticFieldMap(nullptr),
-    trackerGeometry(nullptr),
-    trackerTopology(nullptr),
     testBeamspotCompatibility(false),
     beamSpot(nullptr),
     testPrimaryVertexCompatibility(false),
@@ -139,28 +136,12 @@ TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf):
     }
     simTrackToken = consumes<edm::SimTrackContainer>(edm::InputTag("famosSimHits"));
     simVertexToken = consumes<edm::SimVertexContainer>(edm::InputTag("famosSimHits"));
+    propagatorLabel = conf.getParameter<std::string>("Propagator");
 }
 
 void
 TrajectorySeedProducer::beginRun(edm::Run const&, const edm::EventSetup & es) 
 {
-    edm::ESHandle<MagneticField> magneticFieldHandle;
-    edm::ESHandle<TrackerGeometry> trackerGeometryHandle;
-    edm::ESHandle<MagneticFieldMap> magneticFieldMapHandle;
-    edm::ESHandle<TrackerTopology> trackerTopologyHandle;
-
-    es.get<IdealMagneticFieldRecord>().get(magneticFieldHandle);
-    es.get<TrackerDigiGeometryRecord>().get(trackerGeometryHandle);
-    es.get<MagneticFieldMapRecord>().get(magneticFieldMapHandle);
-    es.get<TrackerTopologyRcd>().get(trackerTopologyHandle);
-    
-    magneticField = &(*magneticFieldHandle);
-    trackerGeometry = &(*trackerGeometryHandle);
-    magneticFieldMap = &(*magneticFieldMapHandle);
-    trackerTopology = &(*trackerTopologyHandle);
-
-    // todo: get the propagator from the event
-    thePropagator = std::make_shared<PropagatorWithMaterial>(alongMomentum,0.105,magneticField);
 }
 
 bool
@@ -356,6 +337,24 @@ std::vector<unsigned int> TrajectorySeedProducer::iterateHits(
 void 
 TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es) 
 {        
+  
+  edm::ESHandle<MagneticField>          magField;
+  es.get<IdealMagneticFieldRecord>().get(magField);
+  
+  edm::ESHandle<TrackerGeometry>        geometry;
+  es.get<TrackerDigiGeometryRecord>().get(geometry);
+
+  edm::ESHandle<TrackerTopology> tTopo;
+  es.get<TrackerTopologyRcd>().get(tTopo);
+
+  edm::ESHandle<Propagator> thePropagator;
+  es.get<TrackingComponentsRecord>().get(propagatorLabel,thePropagator);
+
+  edm::ESHandle<MagneticFieldMap> magFieldMapHandle;
+  es.get<MagneticFieldMapRecord>().get(magFieldMapHandle);
+  magFieldMap = magFieldMapHandle.product();
+    
+
     PTrajectoryStateOnDet initialState;
 
     // the tracks to be skipped
@@ -431,7 +430,7 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
 	  
 	  previousTrackerHit=currentTrackerHit;
 	  
-	  currentTrackerHit = TrajectorySeedHitCandidate(theRecHit.get(),trackerGeometry,trackerTopology);
+	  currentTrackerHit = TrajectorySeedHitCandidate(theRecHit.get(),geometry.product(),tTopo.product());
 
             if (!currentTrackerHit.isOnTheSameLayer(previousTrackerHit))
             {
@@ -479,7 +478,7 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
 
             GlobalVector momentum(theSimTrack.momentum().x(),theSimTrack.momentum().y(),theSimTrack.momentum().z());
             float charge = theSimTrack.charge();
-            GlobalTrajectoryParameters initialParams(position,momentum,(int)charge,magneticField);
+            GlobalTrajectoryParameters initialParams(position,momentum,(int)charge,magField.product());
             AlgebraicSymMatrix55 errorMatrix= AlgebraicMatrixID();
             //this line help the fit succeed in the case of pixelless tracks (4th and 5th iteration)
             //for the future: probably the best thing is to use the mini-kalmanFilter
@@ -490,7 +489,7 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
             CurvilinearTrajectoryError initialError(errorMatrix);
             FreeTrajectoryState initialFTS(initialParams, initialError);
 
-            const GeomDet* initialLayer = trackerGeometry->idToDet( recHits.back().geographicalId() );
+            const GeomDet* initialLayer = geometry->idToDet( recHits.back().geographicalId() );
             const TrajectoryStateOnSurface initialTSOS = thePropagator->propagate(initialFTS,initialLayer->surface()) ;
 
             if (!initialTSOS.isValid())
@@ -542,7 +541,7 @@ TrajectorySeedProducer::compatibleWithBeamSpot(
     //  - vertex at second rechit
     //  - momentum direction: from first to second rechit
     //  - magnitude of momentum: nonsense (distance between 1st and 2nd rechit)  
-    ParticlePropagator myPart(thePos2 - thePos1,thePos2,1.,magneticFieldMap);
+    ParticlePropagator myPart(thePos2 - thePos1,thePos2,1.,magFieldMap);
 
     /*
     propagateToBeamCylinder does the following

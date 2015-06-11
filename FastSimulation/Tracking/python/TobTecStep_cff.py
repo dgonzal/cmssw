@@ -62,8 +62,7 @@ tobTecStepSeeds = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepSeeds.c
 import FastSimulation.Tracking.TrackCandidateProducer_cfi
 tobTecStepTrackCandidates = FastSimulation.Tracking.TrackCandidateProducer_cfi.trackCandidateProducer.clone(
     src = cms.InputTag("tobTecStepSeeds"),
-    MinNumberOfCrossedLayers = 3
-)
+    )
 
 # tracks 
 tobTecStepTracks = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepTracks.clone(

@@ -44,16 +44,15 @@ class TrackCandidateProducer : public edm::stream::EDProducer <>
   
  private:
 
-  std::shared_ptr<PropagatorWithMaterial> thePropagator;
-
   bool rejectOverlaps;
   bool splitHits;
   
-  // tokens
+  // tokens and event setup labels
   edm::EDGetTokenT<TrajectorySeedCollection> seedCollectionToken;
   edm::EDGetTokenT<FastTMatchedRecHit2DCombinations> recHitCombinationsToken;
   edm::EDGetTokenT<edm::SimVertexContainer> simVtxCollectionToken;
   edm::EDGetTokenT<edm::SimTrackContainer> simTkCollectionToken;
+  std::string propagatorLabel;
 };
 
 #endif

@@ -45,6 +45,7 @@ TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf)
   // input tags
   edm::InputTag seedProducerLabel = conf.getParameter<edm::InputTag>("src");
   edm::InputTag simTkProducerLabel = conf.getParameter<edm::InputTag>("SimTracks");
+  propagatorLabel = conf.getParameter<std::string>("Propagator");
 
   // Reject overlapping hits?
   rejectOverlaps = conf.getParameter<bool>("OverlapCleaning");
@@ -55,8 +56,8 @@ TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf)
   // consumes
   seedCollectionToken = consumes<TrajectorySeedCollection>(seedProducerLabel);
   recHitCombinationsToken = consumes<FastTMatchedRecHit2DCombinations>(seedProducerLabel);
-  simVtxCollectionToken = consumes<edm::SimVertexContainer>(simTkProducerLabel);
   simTkCollectionToken = consumes<edm::SimTrackContainer>(simTkProducerLabel);
+  simVtxCollectionToken = consumes<edm::SimVertexContainer>(simTkProducerLabel);
 }
   
  
@@ -75,10 +76,10 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
   es.get<TrackerDigiGeometryRecord>().get(geometry);
 
   edm::ESHandle<TrackerTopology> tTopo;
-  es.get<IdealGeometryRecord>().get(tTopo);
+  es.get<TrackerTopologyRcd>().get(tTopo);
 
-  // TODO: get the propagator from the event setup
-  thePropagator = std::make_shared<PropagatorWithMaterial>(alongMomentum,0.105,magField.product());
+  edm::ESHandle<Propagator> thePropagator;
+  es.get<TrackingComponentsRecord>().get(propagatorLabel,thePropagator);
   
   // the source
   edm::Handle<TrajectorySeedCollection> theSeedCollection;
@@ -103,11 +104,10 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 
     // get the list of hits from which to produce the TrackCandidate
     std::vector<TrajectorySeedHitCandidate> theTrackerRecHits;
-    TrajectorySeedHitCandidate _recHit;
-    for (const auto & recHit : theRecHitCombination){
-
-      _recHit = TrajectorySeedHitCandidate(recHit.get(),geometry.product(),tTopo.product());
+    TrajectorySeedHitCandidate _recHit;  
     
+    for (const auto & recHit : theRecHitCombination){
+      _recHit = TrajectorySeedHitCandidate(recHit.get(),geometry.product(),tTopo.product());
       if ( !rejectOverlaps ||                                                       // if we don't care about multiple hits on same layer
 	   theTrackerRecHits.size() == 0 ||                                         //    or if there is no privious hit
 	   _recHit.subDetId()    != theTrackerRecHits.back().subDetId() ||          //    or if the previous hit was not on the same layer
@@ -118,7 +118,7 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 	theTrackerRecHits.back() = _recHit;                                         // 	  replace it with the current hit
       }
     }
-    
+
     // convert TrajectorySeedHitCandidate to TrackingRecHit 
     edm::OwnVector<TrackingRecHit> recHits;
     unsigned nTrackerHits = theTrackerRecHits.size();

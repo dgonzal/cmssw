@@ -40,13 +40,6 @@ class TrajectorySeedProducer:
     private:
         SeedingTree<TrackingLayer> _seedingTree;
 
-        const MagneticField* magneticField;
-        const MagneticFieldMap* magneticFieldMap;
-        const TrackerGeometry* trackerGeometry;
-        const TrackerTopology* trackerTopology;
-
-        std::shared_ptr<PropagatorWithMaterial> thePropagator;
-
         double simTrack_pTMin;
         double simTrack_maxD0;
         double simTrack_maxZ0;
@@ -71,6 +64,11 @@ class TrajectorySeedProducer:
         edm::EDGetTokenT<FastTMatchedRecHit2DCombinations> recHitCombinationsToken;
         edm::EDGetTokenT<reco::VertexCollection> recoVertexToken;
         std::vector<edm::EDGetTokenT<std::vector<unsigned int> > > skipSimTrackIdTokens;
+	std::string propagatorLabel;
+
+	// this variable will soon go,
+	// when the region producer is used to do the 2hits tests
+	const MagneticFieldMap * magFieldMap;
 
     public:
 
