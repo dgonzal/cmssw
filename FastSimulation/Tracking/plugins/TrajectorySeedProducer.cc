@@ -48,7 +48,6 @@ TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf):
     primaryVertices(nullptr)
 {  
     produces<TrajectorySeedCollection>();
-    produces<FastTMatchedRecHit2DCombinations>(); // TODO: turn into a vector of refs, or a value map
     
     const edm::ParameterSet& simTrackSelectionConfig = conf.getParameter<edm::ParameterSet>("simTrackSelection");
     // The smallest pT,dxy,dz for a simtrack
@@ -392,10 +391,11 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
     e.getByToken(recHitCombinationsToken, theRecHitCombinations);
 
     std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
-    std::auto_ptr<FastTMatchedRecHit2DCombinations> outputCombinations{new FastTMatchedRecHit2DCombinations()};
 
-    for (const auto & theRecHitCombination : *theRecHitCombinations.product()){
+    for (size_t recHitCombinationIndex = 0;recHitCombinationIndex < theRecHitCombinations->size();++recHitCombinationIndex){
       
+      const auto & theRecHitCombination = theRecHitCombinations->at(recHitCombinationIndex);
+	
       if(theRecHitCombination.size() ==0)
 	continue;
 
@@ -511,14 +511,12 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
             int surfaceSide = static_cast<int>(initialTSOS.surfaceSide());
             initialState = PTrajectoryStateOnDet( initialTSOS.localParameters(),initialTSOS.globalMomentum().perp(),localErrors, recHits.back().geographicalId().rawId(), surfaceSide);
             output->push_back(TrajectorySeed(initialState, recHits, PropagationDirection::alongMomentum));
-	    outputCombinations->push_back(theRecHitCombination);
-
+	    output->back().setCombinationIndex(recHitCombinationIndex);
         }
     } //end loop over simtracks
     
 
     e.put(output);
-    e.put(outputCombinations);
 }
 
 

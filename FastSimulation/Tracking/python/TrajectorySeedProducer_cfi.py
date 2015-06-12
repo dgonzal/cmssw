@@ -29,5 +29,9 @@ trajectorySeedProducer = cms.EDProducer(
     src = cms.InputTag("siTrackerGaussianSmearingRecHits"),
                                         
     layerList = cms.vstring(),
+    
+    # the propagator
+    Propagator = cms.string("PropagatorWithMaterial"),
+
     )
 

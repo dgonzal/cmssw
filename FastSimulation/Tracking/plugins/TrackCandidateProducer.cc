@@ -44,6 +44,7 @@ TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf)
   
   // input tags
   edm::InputTag seedProducerLabel = conf.getParameter<edm::InputTag>("src");
+  edm::InputTag recHitCombinationsLabel = conf.getParameter<edm::InputTag>("recHitCombinations");
   edm::InputTag simTkProducerLabel = conf.getParameter<edm::InputTag>("SimTracks");
   propagatorLabel = conf.getParameter<std::string>("Propagator");
 
@@ -55,7 +56,7 @@ TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf)
 
   // consumes
   seedCollectionToken = consumes<TrajectorySeedCollection>(seedProducerLabel);
-  recHitCombinationsToken = consumes<FastTMatchedRecHit2DCombinations>(seedProducerLabel);
+  recHitCombinationsToken = consumes<FastTMatchedRecHit2DCombinations>(recHitCombinationsLabel);
   simTkCollectionToken = consumes<edm::SimTrackContainer>(simTkProducerLabel);
   simVtxCollectionToken = consumes<edm::SimVertexContainer>(simTkProducerLabel);
 }
@@ -100,7 +101,8 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
   for (unsigned seednr = 0; seednr < theSeedCollection->size(); ++seednr){
 
     // a reference to the RecHitCombination from which the seed was produced
-    const FastTMatchedRecHit2DCombination & theRecHitCombination = theRecHitCombinations->at(seednr);
+    const TrajectorySeed & seed = theSeedCollection->at(seednr);
+    const FastTMatchedRecHit2DCombination & theRecHitCombination = theRecHitCombinations->at(seed.getCombinationIndex());
 
     // get the list of hits from which to produce the TrackCandidate
     std::vector<TrajectorySeedHitCandidate> theTrackerRecHits;

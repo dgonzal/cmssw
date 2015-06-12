@@ -16,6 +16,8 @@ trackCandidateProducer = cms.EDProducer(
     Propagator = cms.string("PropagatorWithMaterial"),
 
     SimTracks = cms.InputTag('famosSimHits'),
+
+    recHitCombinations = cms.InputTag("siTrackerGaussianSmearingRecHits"),
     )
 
 
