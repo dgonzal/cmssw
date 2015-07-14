@@ -15,7 +15,10 @@ class OmniClusterRef;
 
 namespace trackerHitRTTI {
   // tracking hit can be : single (si1D, si2D, pix), projected, matched or multi
-  enum RTTI { undef=0, single=1, projStereo=2, projMono=3, match=4, multi=5, gs=6, gsMatch=7};
+  enum RTTI { undef=0, 
+	      single=1, projStereo=2, projMono=3, match=4, multi=5,
+	      fastSingle=6, fastProjStereo=7,fastProjMono=8,fastMatch=9
+  };
   inline RTTI rtti(TrackingRecHit const & hit)  { return RTTI(hit.getRTTI());}
   inline bool isUndef(TrackingRecHit const & hit) { return rtti(hit)==undef;}
   inline bool isSingle(TrackingRecHit const & hit)  { return rtti(hit)==single;}
@@ -24,8 +27,15 @@ namespace trackerHitRTTI {
   inline bool isProjected(TrackingRecHit const & hit)  { return (rtti(hit)==projMono) | (rtti(hit)==projStereo);}
   inline bool isMatched(TrackingRecHit const & hit)  { return rtti(hit)==match;}
   inline bool isMulti(TrackingRecHit const & hit)  { return rtti(hit)==multi;}
-  inline bool isGS(TrackingRecHit const & hit)  { return rtti(hit)==gs;}
   inline bool isSingleType(TrackingRecHit const & hit)  { return (rtti(hit)>0) & (rtti(hit)<4) ;}
+
+  inline bool isFastSingle(TrackingRecHit const & hit)  { return rtti(hit)==fastSingle;}
+  inline bool isFastProjMono(TrackingRecHit const & hit)  { return rtti(hit)==fastProjMono;}
+  inline bool isFastProjStereo(TrackingRecHit const & hit)  { return rtti(hit)==fastProjStereo;}
+  inline bool isFastProjected(TrackingRecHit const & hit)  { return (rtti(hit)==fastProjMono) | (rtti(hit)==fastProjStereo);}
+  inline bool isFastMatched(TrackingRecHit const & hit)  { return rtti(hit)==fastMatch;}
+  //inline bool isFastMulti(TrackingRecHit const & hit)  { return rtti(hit)==multi;}
+  inline bool isFastSingleType(TrackingRecHit const & hit)  { return (rtti(hit)>5) & (rtti(hit)<9) ;}
 
   inline unsigned int  projId(TrackingRecHit const & hit) { return hit.rawId()+int(rtti(hit))-1;}
 }

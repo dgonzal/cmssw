@@ -1,25 +1,29 @@
 <lcgdict>
-  <class name="GSSiTrackerRecHit2DLocalPos" ClassVersion="14">
-   <version ClassVersion="14" checksum="641505164"/>
-   <version ClassVersion="13" checksum="2851199532"/>
-   <version ClassVersion="12" checksum="1712216203"/>
-   <version ClassVersion="11" checksum="834943006"/>
-   <version ClassVersion="10" checksum="2474445311"/>
-  </class>
-  <class name="SiTrackerGSRecHit2D" ClassVersion="12">
-   <version ClassVersion="12" checksum="1304080531"/>
-   <version ClassVersion="11" checksum="1613493049"/>
-   <version ClassVersion="10" checksum="877294307"/>
-  </class>
-  <class name="SiTrackerGSMatchedRecHit2D" ClassVersion="15">
-   <version ClassVersion="15" checksum="3518158739"/>
-   <version ClassVersion="14" checksum="1823455267"/>
-   <version ClassVersion="13" checksum="1553184391"/>
-   <version ClassVersion="12" checksum="2874379530"/>
-   <version ClassVersion="11" checksum="1553184391"/>
-   <version ClassVersion="10" checksum="3741285161"/>
-  </class>
 
+  <class name="FastBaseTrackerRecHit" ClassVersion="0">
+    <version ClassVersion="0" checksum="499832952"/>
+  </class>
+  <class name="FastSiStripRecHit1D" ClassVersion="0">
+   <version ClassVersion="0" checksum="1423681962"/>
+  </class>
+  <class name="FastSiStripRecHit2D" ClassVersion="0">
+   <version ClassVersion="0" checksum="2403412817"/>
+  </class>
+  <class name="FastSiPixelRecHit" ClassVersion="0">
+   <version ClassVersion="0" checksum="1295316233"/>
+  </class>
+  <class name="FastTrackerSingleRecHit" ClassVersion="0">
+   <version ClassVersion="0" checksum="1885647429"/>
+  </class>
+  <class name="FastProjectedSiStripRecHit2D" ClassVersion="0">
+   <version ClassVersion="0" checksum="4197087825"/>
+  </class>
+  <class name="FastSiStripRecHit2D" ClassVersion="0">
+   <version ClassVersion="0" checksum="2403412817"/>
+  </class>
+  <class name="FastSiStripMatchedRecHit2D" ClassVersion="0">
+   <version ClassVersion="0" checksum="2138466464"/>
+  </class>
 
   <class name="BaseTrackerRecHit" ClassVersion="12">
    <version ClassVersion="12" checksum="2900718455"/>
