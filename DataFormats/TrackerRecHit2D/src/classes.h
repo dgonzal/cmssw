@@ -24,6 +24,11 @@
 #include "DataFormats/TrackerRecHit2D/interface/ProjectedSiStripRecHit2D.h"
 #include "DataFormats/TrackerRecHit2D/interface/ClusterRemovalInfo.h"
 #include "DataFormats/TrackerRecHit2D/interface/SiTrackerMultiRecHit.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHit.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastMatchedTrackerRecHit.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastProjectedTrackerRecHit.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCombination.h"
+
 #include <vector>
 
 namespace DataFormats_TrackerRecHit2D {

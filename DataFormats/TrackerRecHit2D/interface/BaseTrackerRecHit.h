@@ -27,6 +27,14 @@ namespace trackerHitRTTI {
   inline bool isGS(TrackingRecHit const & hit)  { return rtti(hit)==gs;}
   inline bool isSingleType(TrackingRecHit const & hit)  { return (rtti(hit)>0) & (rtti(hit)<4) ;}
 
+  inline bool isFastSingle(TrackingRecHit const & hit)  { return rtti(hit)==fastSingle;}
+  inline bool isFastProjMono(TrackingRecHit const & hit)  { return rtti(hit)==fastProjMono;}
+  inline bool isFastProjStereo(TrackingRecHit const & hit)  { return rtti(hit)==fastProjStereo;}
+  inline bool isFastProjected(TrackingRecHit const & hit)  { return (rtti(hit)==fastProjMono) | (rtti(hit)==fastProjStereo);}
+  inline bool isFastMatched(TrackingRecHit const & hit)  { return rtti(hit)==fastMatch;}
+  inline bool isFastSingleType(TrackingRecHit const & hit)  { return (rtti(hit)>5) & (rtti(hit)<9) ;}
+  inline bool isFast(TrackingRecHit const & hit)  { return (rtti(hit)>5) & (rtti(hit)<=9) ;}
+
   inline unsigned int  projId(TrackingRecHit const & hit) { return hit.rawId()+int(rtti(hit))-1;}
 }
 

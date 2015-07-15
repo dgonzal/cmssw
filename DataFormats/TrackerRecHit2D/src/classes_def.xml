@@ -1,23 +1,13 @@
 <lcgdict>
-  <class name="GSSiTrackerRecHit2DLocalPos" ClassVersion="14">
-   <version ClassVersion="14" checksum="641505164"/>
-   <version ClassVersion="13" checksum="2851199532"/>
-   <version ClassVersion="12" checksum="1712216203"/>
-   <version ClassVersion="11" checksum="834943006"/>
-   <version ClassVersion="10" checksum="2474445311"/>
+
+  <class name="FastTrackerRecHit" ClassVersion="0">
+    <version ClassVersion="0" checksum="2033985671"/>
   </class>
-  <class name="SiTrackerGSRecHit2D" ClassVersion="12">
-   <version ClassVersion="12" checksum="1304080531"/>
-   <version ClassVersion="11" checksum="1613493049"/>
-   <version ClassVersion="10" checksum="877294307"/>
+  <class name="FastMatchedTrackerRecHit" ClassVersion="0">
+   <version ClassVersion="0" checksum="277428286"/>
   </class>
-  <class name="SiTrackerGSMatchedRecHit2D" ClassVersion="15">
-   <version ClassVersion="15" checksum="3518158739"/>
-   <version ClassVersion="14" checksum="1823455267"/>
-   <version ClassVersion="13" checksum="1553184391"/>
-   <version ClassVersion="12" checksum="2874379530"/>
-   <version ClassVersion="11" checksum="1553184391"/>
-   <version ClassVersion="10" checksum="3741285161"/>
+  <class name="FastProjectedTrackerRecHit" ClassVersion="0">
+   <version ClassVersion="0" checksum="2806789147"/>
   </class>
 
 
