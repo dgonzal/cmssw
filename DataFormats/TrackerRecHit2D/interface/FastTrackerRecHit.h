@@ -7,42 +7,67 @@
  * - fast tracking emulation
  */
 
-#ifndef FastBaseTrackerRecHit_H
-#define FastBaseTrackerRecHit_H
+#ifndef FastTrackerRecHit_H
+#define FastTrackerRecHit_H
 
-#include "BaseTrackerRecHit.h"
+#include "DataFormats/TrackerRecHit2D/interface/BaseTrackerRecHit.h"
 #include "stdint.h"
 
-class FastBaseTrackerRecHit : public BaseTrackerRecHit 
-{
+namespace fastTrackerRecHitType {
+    enum HitType {
+	siPixel = 0,
+	siStrip1D = 1,
+	siStrip2D = 2,
+	siStripMatched2D = 3,
+	siStripProjectedMono2D = 4,
+	siStripProjectedStereo2D = 5,
+    };
+    inline trackerHitRTTI::RTTI rtti(HitType hitType){
+	if(hitType >=0 || hitType <= 2) return trackerHitRTTI::fastSingle;
+	else if(hitType == siStripMatched2D) return trackerHitRTTI::fastMatch;
+	else if(hitType == siStripProjectedMono2D) return trackerHitRTTI::fastProjMono;
+	else if(hitType == siStripProjectedStereo2D) return trackerHitRTTI::fastProjStereo;
+    }
+    inline bool is2D(HitType hitType) {return hitType != siStrip1D;}
+    inline bool isPixel(HitType hitType) {return hitType == siPixel;}
+}
 
+class FastTrackerRecHit : public BaseTrackerRecHit 
+{
     public:
-    
+
     /// default constructor
     /// 
-    FastBaseTrackerRecHit()
+    FastTrackerRecHit()
 	: BaseTrackerRecHit()
 	, id_(-1)
 	, eeId_(0)
 	, hitCombinationId_(-1)
+	, isPixel_(false)
+	, is2D_(true)
 	{}
     
     /// destructor
     ///
-    ~FastBaseTrackerRecHit() {}
+    ~FastTrackerRecHit() {}
     
     /// constructor
     /// requires a position with error in local detector coordinates,
     /// the detector id, and type information (rt)
-    FastBaseTrackerRecHit( const LocalPoint& p, const LocalError&e, GeomDet const & idet,trackerHitRTTI::RTTI rt) 
-	: BaseTrackerRecHit(p,e,idet,rt) 
+    FastTrackerRecHit( const LocalPoint& p, const LocalError&e, GeomDet const & idet,fastTrackerRecHitType::HitType hitType) 
+	: BaseTrackerRecHit(p,e,idet,fastTrackerRecHitType::rtti(hitType)) 
 	, id_(-1)
 	, eeId_(0)
 	, hitCombinationId_(-1)
+	, isPixel_(fastTrackerRecHitType::isPixel(hitType))
+	, is2D_(fastTrackerRecHitType::is2D(hitType))
 	{store();}
 
-    virtual FastBaseTrackerRecHit * clone() const =0;
-    
+    virtual FastTrackerRecHit * clone() const GCC11_OVERRIDE {FastTrackerRecHit * p = new FastTrackerRecHit( * this); p->load(); return p;} ///< copy the hit
+    int dimension() const GCC11_OVERRIDE {return is2D_ ? 2 : 1;} ///< get the dimensions right
+    void getKfComponents( KfComponentsHolder & holder ) const GCC11_OVERRIDE { if(is2D_) getKfComponents2D(holder); else getKfComponents1D(holder);} ///< get the dimensions right
+    bool isPixel() const GCC11_OVERRIDE {return isPixel_;} ///< pixel or strip?
+
     /* getters */
   
     int32_t                      id()                     const { return id_;}                  ///< see setId(int32_t id)
@@ -96,7 +121,11 @@ class FastBaseTrackerRecHit : public BaseTrackerRecHit
     // - FastTrackerSingleRecHit::sharesInput 
     // - FastSiStripMatchedRecHit::sharesInput
     // - FastProjectedSiStripRecHit2D::sharesInput
-    virtual bool hasEqualOrigin(const FastBaseTrackerRecHit & other) const {return id_ == other.id_ && eeId_ == other.eeId_;}
+    virtual bool hasEqualOrigin(const FastTrackerRecHit & other) const {return id_ == other.id_ && eeId_ == other.eeId_;}
+
+    /// DESCRIBE ME
+    //
+    virtual bool sharesInput(const TrackingRecHit* other, SharedInputType what) const;
 
     // fastsim hits cannot improve with track
     //
@@ -111,6 +140,8 @@ class FastBaseTrackerRecHit : public BaseTrackerRecHit
     int32_t id_;                         ///< see setId(int32_t id)
     int32_t eeId_;                       ///< see setEeId(int32_t eeid)
     int32_t hitCombinationId_;           ///< see setHitCombinationId(int32_t hitCombinationId)
+    bool isPixel_;                       ///< hit is either on pixel modul (isPixel_ = true) or strip module (isPixel_ = false)
+    bool is2D_;                          ///< hit is either one dimensional (is2D_ = false) or two dimensions (is2D_ = true)
     std::vector<int32_t> simTrackIds_;   ///< see addSimTrackIds(int32_t)
 
     LocalPoint m_myPos;                  ///< helps making the hit postion and error persistent
@@ -123,7 +154,7 @@ class FastBaseTrackerRecHit : public BaseTrackerRecHit
 
 /// Comparison operator
 ///
-inline bool operator<( const FastBaseTrackerRecHit& one, const FastBaseTrackerRecHit& other) {
+inline bool operator<( const FastTrackerRecHit& one, const FastTrackerRecHit& other) {
     return ( one.geographicalId() < other.geographicalId() );
 }
 
