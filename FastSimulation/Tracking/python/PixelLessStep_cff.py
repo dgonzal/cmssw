@@ -22,17 +22,18 @@ pixelLessStepSeeds = FastSimulation.Tracking.TrajectorySeedProducer_cfi.trajecto
             cms.InputTag("pixelPairStepSimTrackIds"),
             cms.InputTag("mixedTripletStepSimTrackIds"),
             cms.InputTag("pixelLessStepSimTrackIds")],
-        pTMin = 0.3,
+#        pTMin = 0.3,
+ #       maxD0 = -1,
+  #      maxZ0 = -1
+        pTMin = 0,
         maxD0 = -1,
-        maxZ0 = -1
+        maxZ0 = -1,
         ),
     minLayersCrossed = 3,
-    ptMin = RecoTracker.IterativeTracking.PixelLessStep_cff.pixelLessStepSeeds.RegionFactoryPSet.RegionPSet.ptMin,
-    originHalfLength = RecoTracker.IterativeTracking.PixelLessStep_cff.pixelLessStepSeeds.RegionFactoryPSet.RegionPSet.originHalfLength,
-    originRadius = RecoTracker.IterativeTracking.PixelLessStep_cff.pixelLessStepSeeds.RegionFactoryPSet.RegionPSet.originRadius,
-    layerList = RecoTracker.IterativeTracking.PixelLessStep_cff.pixelLessStepSeedLayers.layerList.value()
-)
-
+    layerList = RecoTracker.IterativeTracking.PixelLessStep_cff.pixelLessStepSeedLayers.layerList.value(),
+    RegionFactoryPSet = RecoTracker.IterativeTracking.PixelLessStep_cff.pixelLessStepSeeds.RegionFactoryPSet,
+    MeasurementTrackerEvent = cms.InputTag("MeasurementTrackerEvent"),
+    )
 # track candidates
 import FastSimulation.Tracking.TrackCandidateProducer_cfi
 pixelLessStepTrackCandidates = FastSimulation.Tracking.TrackCandidateProducer_cfi.trackCandidateProducer.clone(
@@ -56,7 +57,8 @@ PixelLessStep = cms.Sequence(pixelLessStepSimTrackIds
                              +pixelLessStepSeeds
                              +pixelLessStepTrackCandidates
                              +pixelLessStepTracks
-                             +pixelLessStepSelector
+ 
+                            +pixelLessStepSelector
                              +pixelLessStep                             
                          )
 
