@@ -23,22 +23,13 @@ class FastSingleTrackerRecHit : public FastTrackerRecHit {
     virtual FastSingleTrackerRecHit * clone() const {FastSingleTrackerRecHit * p =  new FastSingleTrackerRecHit( * this); p->load(); return p;}
 
     size_t                       nIds()                    const { return 1;}
-    int32_t                      id(size_t i =0)             const { return i == 0 ? id_ : -1;}
+    int32_t                      id(size_t i =0)           const { return i == 0 ? id_ : -1;}
+    int32_t                      eventId(size_t i = 0)     const { return i == 0 ? eventId_ : -1;}
     int32_t                      eventId()                 const { return eventId_;}                                        ///< see setId(int32_t id)
     size_t                       nSimTrackIds()            const { return simTrackIds_.size();}                             ///< see addSimTrackId(int32_t simTrackId)
     int32_t                      simTrackId(size_t i)      const { return i < simTrackIds_.size() ? simTrackIds_[i] : -1;}  ///< see addSimTrackId(int32_t simTrackId)
     int32_t                      simTrackEventId(size_t i) const { return i < simTrackIds_.size() ? eventId_ : -1;}  ///< see addSimTrackId(int32_t simTrackId)
 
-    /// fastsim's way to check whether 2 single hits share sim-information or not
-    /// hits are considered to share sim-information if 
-    /// - they have the same hit id number
-    /// - they have the same event id number
-    // used by functions
-    // - FastTrackerSingleRecHit::sharesInput 
-    // - FastSiStripMatchedRecHit::sharesInput
-    // - FastProjectedSiStripRecHit2D::sharesInput
-    bool sharesInput(const FastSingleTrackerRecHit * other) const {return id_ == other->id_ && eventId_ == other->eventId_;}
-    bool sharesInput(const TrackingRecHit * other,SharedInputType what) const;
 
     /// add an id number to the list of id numbers of SimTracks from which the hit originates
     /// the SimTrack id numbers are the indices of the SimTracks in the SimTrack collection

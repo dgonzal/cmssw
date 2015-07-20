@@ -78,6 +78,7 @@ class FastTrackerRecHit : public BaseTrackerRecHit
 
     virtual size_t               nIds()                        const { return 0;}
     virtual int32_t              id(size_t i = 0)              const { return -1;}
+    virtual int32_t              eventId(size_t i = 0)         const { return -1;}
     
     int32_t                      hitCombinationId()            const { return hitCombinationId_;}    ///< see setHitCombinationId(int32_t hitCombinationId)
     virtual size_t               nSimTrackIds()                const { return 0;}                    ///< see FastSingleTrackerRecHit::addSimTrackId(int32_t simTrackId)
@@ -104,6 +105,17 @@ class FastTrackerRecHit : public BaseTrackerRecHit
     /// bogus function : 
     /// implement purely virutal function of BaseTrackerRecHit
     OmniClusterRef const & firstClusterRef() const;
+
+    /// fastsim's way to check whether 2 single hits share sim-information or not
+    /// hits are considered to share sim-information if 
+    /// - they have the same hit id number
+    /// - they have the same event id number
+    // used by functions
+    // - FastTrackerSingleRecHit::sharesInput 
+    // - FastSiStripMatchedRecHit::sharesInput
+    // - FastProjectedSiStripRecHit2D::sharesInput
+    bool sameId(const FastTrackerRecHit * other,size_t i=0) const {return id(i) == other->id(i) && eventId(i) == other->eventId(i);}
+    bool sharesInput(const TrackingRecHit * other,SharedInputType what) const;
 
     protected:
 
