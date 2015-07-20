@@ -27,6 +27,8 @@ class FastProjectedTrackerRecHit : public FastTrackerRecHit {
     bool sharesInput (const TrackingRecHit* other, SharedInputType what) const {return originalHit_.sharesInput(other,what);}
     const FastTrackerRecHit & originalHit() const {return originalHit_;}
     virtual FastProjectedTrackerRecHit * clone() const {FastProjectedTrackerRecHit * p =  new FastProjectedTrackerRecHit( * this); p->load(); return p;}
+    size_t                       nIds()                    const { return 1;}
+    int32_t                      id(size_t i = 0)          const { return originalHit().id(i);}
     size_t                       nSimTrackIds()            const { return originalHit_.nSimTrackIds();}                             ///< see addSimTrackId(int32_t simTrackId)
     int32_t                      simTrackId(size_t i)      const { return originalHit_.simTrackId(i);}                              ///< see addSimTrackId(int32_t simTrackId)
     int32_t                      simTrackEventId(size_t i) const { return originalHit_.simTrackEventId(i);;}                        ///< see addSimTrackId(int32_t simTrackId)
