@@ -19,8 +19,7 @@
 
 // Data Formats
 #include "SimDataFormats/CrossingFrame/interface/MixCollection.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2DCollection.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2DCollection.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCombination.h"
 #include "DataFormats/GeometryVector/interface/Point3DBase.h"
 #include "DataFormats/GeometrySurface/interface/LocalError.h"
 
@@ -63,20 +62,20 @@ class SiTrackerGaussianSmearingRecHitConverter : public edm::stream::EDProducer 
   
   //  void smearHits(MixCollection<PSimHit>& input,
   void smearHits(const edm::PSimHitContainer& input,
-  //  void smearHits(edm::Handle<std::vector<PSimHit> >& input,
-                 std::map<unsigned, edm::OwnVector<SiTrackerGSRecHit2D> >& theRecHits,
+		 //  void smearHits(edm::Handle<std::vector<PSimHit> >& input,
+                 std::map<unsigned, FastSingleTrackerRecHitCombination >& theRecHits,
 		 const TrackerTopology *tTopo,
                  RandomEngineAndDistribution const*);
 
- void  matchHits( std::map<unsigned, edm::OwnVector<SiTrackerGSRecHit2D> >& theRecHits, 
-		  std::map<unsigned, edm::OwnVector<SiTrackerGSMatchedRecHit2D> >& matchedMap);//,
+ void  matchHits( std::map<unsigned, FastSingleTrackerRecHitCombination>& theRecHits, 
+		  std::map<unsigned, FastTrackerRecHitCombination>& matchedMap);//,
 		  //		  MixCollection<PSimHit>& simhits);
    //		  const edm::PSimHitContainer& simhits);
 		  //		  std::vector<PSimHit>& simhits); 
 		  //		  edm::Handle<std::vector<PSimHit> >& simhits);
 
-  void loadMatchedRecHits(std::map<unsigned,edm::OwnVector<SiTrackerGSMatchedRecHit2D> >& theRecHits, 
-		   FastTMRecHitCombinations & recHitCombinations) const;
+  void loadMatchedRecHits(std::map<unsigned,FastTrackerRecHitCombination>& theRecHits, 
+			  FastTrackerRecHitCombinations & recHitCombinations) const;
 
   private:
   //
