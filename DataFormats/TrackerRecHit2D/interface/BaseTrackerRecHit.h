@@ -21,22 +21,14 @@ namespace trackerHitRTTI {
   };
   inline RTTI rtti(TrackingRecHit const & hit)  { return RTTI(hit.getRTTI());}
   inline bool isUndef(TrackingRecHit const & hit) { return rtti(hit)==undef;}
-  inline bool isSingle(TrackingRecHit const & hit)  { return rtti(hit)==single;}
-  inline bool isProjMono(TrackingRecHit const & hit)  { return rtti(hit)==projMono;}
-  inline bool isProjStereo(TrackingRecHit const & hit)  { return rtti(hit)==projStereo;}
-  inline bool isProjected(TrackingRecHit const & hit)  { return (rtti(hit)==projMono) | (rtti(hit)==projStereo);}
-  inline bool isMatched(TrackingRecHit const & hit)  { return rtti(hit)==match;}
+  inline bool isSingle(TrackingRecHit const & hit)  { return rtti(hit)==single || rtti(hit)==fastSingle;}
+  inline bool isProjMono(TrackingRecHit const & hit)  { return rtti(hit)==projMono || rtti(hit)==fastProjMono;}
+  inline bool isProjStereo(TrackingRecHit const & hit)  { return rtti(hit)==projStereo || fastProjMono;}
+  inline bool isProjected(TrackingRecHit const & hit)  { return ((rtti(hit)==projMono) | (rtti(hit)==projStereo)) || (rtti(hit)==fastProjMono) | (rtti(hit)==fastProjStereo);}
+  inline bool isMatched(TrackingRecHit const & hit)  { return rtti(hit)==match || rtti(hit)==fastMatch;}
   inline bool isMulti(TrackingRecHit const & hit)  { return rtti(hit)==multi;}
   inline bool isSingleType(TrackingRecHit const & hit)  { return (rtti(hit)>0) & (rtti(hit)<4) ;}
-
-  inline bool isFastSingle(TrackingRecHit const & hit)  { return rtti(hit)==fastSingle;}
-  inline bool isFastProjMono(TrackingRecHit const & hit)  { return rtti(hit)==fastProjMono;}
-  inline bool isFastProjStereo(TrackingRecHit const & hit)  { return rtti(hit)==fastProjStereo;}
-  inline bool isFastProjected(TrackingRecHit const & hit)  { return (rtti(hit)==fastProjMono) | (rtti(hit)==fastProjStereo);}
-  inline bool isFastMatched(TrackingRecHit const & hit)  { return rtti(hit)==fastMatch;}
-  inline bool isFastSingleType(TrackingRecHit const & hit)  { return (rtti(hit)>5) & (rtti(hit)<9) ;}
   inline bool isFast(TrackingRecHit const & hit)  { return (rtti(hit)>5) & (rtti(hit)<=9) ;}
-
   inline unsigned int  projId(TrackingRecHit const & hit) { return hit.rawId()+int(rtti(hit))-1;}
 }
 
@@ -69,8 +61,9 @@ public:
   bool isProjected() const { return trackerHitRTTI::isProjected(*this);}
   bool isProjMono() const { return trackerHitRTTI::isProjMono(*this);}
   bool isProjSterep() const { return trackerHitRTTI::isProjStereo(*this);}
+  bool isFastSim() const { return trackerHitRTTI::isFast(*this);}
   bool isMulti() const { return trackerHitRTTI::isMulti(*this);}
-
+  
   virtual bool isPixel() const { return false;}
 
  // used by trackMerger (to be improved)

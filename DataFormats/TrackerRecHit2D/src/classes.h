@@ -115,6 +115,9 @@ namespace DataFormats_TrackerRecHit2D {
     edm::Wrapper<edmNew::DetSetVector<SiPixelRecHit> > wdstvDummy3;
 
     edm::Wrapper<reco::ClusterRemovalInfo> clusterRemovalInfo;
+
+    std::vector<edm::OwnVector<FastTrackerRecHit,edm::ClonePolicy<FastTrackerRecHit> > > fastsimTrackerRecHitCollection;
+      edm::Wrapper<std::vector<edm::OwnVector<FastTrackerRecHit,edm::ClonePolicy<FastTrackerRecHit> > > >fastsimTrackerRecHitCollection_Wrapper;
   };
 }
 
