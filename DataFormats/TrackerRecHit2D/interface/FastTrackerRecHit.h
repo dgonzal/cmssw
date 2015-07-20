@@ -75,6 +75,9 @@ class FastTrackerRecHit : public BaseTrackerRecHit
     virtual bool canImproveWithTrack() const {return false;}
 
     /* getters */
+
+    virtual size_t               nIds()                        const { return 0;}
+    virtual int32_t              id(size_t i = 0)              const { return -1;}
     
     int32_t                      hitCombinationId()            const { return hitCombinationId_;}    ///< see setHitCombinationId(int32_t hitCombinationId)
     virtual size_t               nSimTrackIds()                const { return 0;}                    ///< see FastSingleTrackerRecHit::addSimTrackId(int32_t simTrackId)
