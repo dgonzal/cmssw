@@ -13,6 +13,8 @@
 #include "SimDataFormats/Track/interface/SimTrackContainer.h"
 #include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
 #include "FastSimulation/Tracking/interface/TrajectorySeedHitCandidate.h"
+#include "RecoTracker/TkSeedGenerator/interface/SeedCreatorFactory.h"
+#include "RecoTracker/TkSeedGenerator/interface/SeedCreator.h"
 
 #include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2DCollection.h"
 #include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2DCollection.h"
@@ -45,15 +47,17 @@ class TrajectorySeedProducer:
         const MagneticFieldMap* magneticFieldMap;
         const TrackerGeometry* trackerGeometry;
         const TrackerTopology* trackerTopology;
-
+	using ConstRecHitPointer =  BaseTrackerRecHit const *;
         std::shared_ptr<PropagatorWithMaterial> thePropagator;
 
         double simTrack_pTMin;
         double simTrack_maxD0;
         double simTrack_maxZ0;
-        
+	SeedCreator *  seedCreator;        
         unsigned int minLayersCrossed;
-
+	//typedef TrackingRecHit const *     ConstRecHitPointer;
+	//typedef TrajectorySeedProducer const *     ConstRecHitPointer;
+	//typedef TrackingRecHit::ConstRecHitPointer ConstRecHitPointer;
         std::vector<std::vector<TrackingLayer>> seedingLayers;    
         // tokens
         edm::EDGetTokenT<reco::BeamSpot> beamSpotToken;

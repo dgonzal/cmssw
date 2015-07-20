@@ -1,4 +1,3 @@
-
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -14,7 +13,8 @@
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
 
 #include "FastSimulation/ParticlePropagator/interface/MagneticFieldMapRecord.h"
-
+//RecoTracker/TkSeedingLayers/interface/SeedingHitSet.h"
+#include "RecoTracker/TkSeedingLayers/interface/SeedingHitSet.h"
 #include "FastSimulation/Tracking/plugins/TrajectorySeedProducer.h"
 
 #include "TrackingTools/TrajectoryParametrization/interface/CurvilinearTrajectoryError.h"
@@ -165,7 +165,8 @@ bool
 TrajectorySeedProducer::pass2HitsCuts(const TrajectorySeedHitCandidate& hit1, const TrajectorySeedHitCandidate& hit2) const
 {
   if(theRegionProducer){
-  return testWithRegions(hit1,hit2);	                 
+  return testWithRegions(hit1,hit2);
+  std::cout<<"Line169"<<std::endl;	                 
   }
   else 
     {
@@ -300,16 +301,21 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
     e.getByToken(recHitToken, theGSRecHits);
 
     std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
-
+    //TrajectorySeedCollection SeedColl;
+    std::cout<<"Line305"<<std::endl;
     //if no hits -> directly write empty collection
     if(theGSRecHits->size() == 0)
     {
         e.put(output);
         return;
     }
+
+    std::cout<<"Line313"<<std::endl;
+
     for (SiTrackerGSMatchedRecHit2DCollection::id_iterator itSimTrackId=theGSRecHits->id_begin();  itSimTrackId!=theGSRecHits->id_end(); ++itSimTrackId )
     {
-
+      //std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
+      std::cout<<"Line318"<<std::endl;
         const unsigned int currentSimTrackId = *itSimTrackId;
 
         if(skipSimTrackIds.find(currentSimTrackId)!=skipSimTrackIds.end())
@@ -336,7 +342,7 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
         TrajectorySeedHitCandidate previousTrackerHit;
         TrajectorySeedHitCandidate currentTrackerHit;
         unsigned int layersCrossed=0;
-
+	std::cout<<"Line341"<<std::endl;
         std::vector<TrajectorySeedHitCandidate> trackerRecHits;
         for (SiTrackerGSMatchedRecHit2DCollection::const_iterator itRecHit = recHitRange.first; itRecHit!=recHitRange.second; ++itRecHit)
         {
@@ -355,6 +361,7 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
                 trackerRecHits.push_back(std::move(currentTrackerHit));
             }
         }
+	std::cout<<"Line360"<<std::endl;
 
         if ( layersCrossed < minLayersCrossed)
         {
@@ -383,62 +390,43 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
 	  e.getByToken(measurementTrackerEventToken,measurementTrackerEventHandle);
 	  measurementTrackerEvent = measurementTrackerEventHandle.product();
 	}
-
+	std::cout<<"Line388"<<std::endl;
         std::vector<unsigned int> seedHitNumbers = iterateHits(0,trackerRecHits,hitIndicesInTree,true);
-
+	//std::map<const TrackingRecHit *, ConstRecHitPointer> hitMap;
         if (seedHitNumbers.size()>0)
         {
-            edm::OwnVector<TrackingRecHit> recHits;
+	  //edm::OwnVector<TrackingRecHit> recHits;
+	    /*
             for ( unsigned ihit=0; ihit<seedHitNumbers.size(); ++ihit )
             {
                 TrackingRecHit* aTrackingRecHit = trackerRecHits[seedHitNumbers[ihit]].hit()->clone();
                 recHits.push_back(aTrackingRecHit);
-            }
-            GlobalPoint  position((*theSimVtx)[vertexIndex].position().x(),
-            (*theSimVtx)[vertexIndex].position().y(),
-            (*theSimVtx)[vertexIndex].position().z());
+		hitMap[aTrackingRecHit]=&recHits[ihit];
 
-            GlobalVector momentum(theSimTrack.momentum().x(),theSimTrack.momentum().y(),theSimTrack.momentum().z());
-            float charge = theSimTrack.charge();
-            GlobalTrajectoryParameters initialParams(position,momentum,(int)charge,magneticField);
-            AlgebraicSymMatrix55 errorMatrix= AlgebraicMatrixID();
-            //this line help the fit succeed in the case of pixelless tracks (4th and 5th iteration)
-            //for the future: probably the best thing is to use the mini-kalmanFilter
-            if(trackerRecHits[seedHitNumbers[0]].subDetId() !=1 ||trackerRecHits[seedHitNumbers[0]].subDetId() !=2)
-            {
-                errorMatrix = errorMatrix * 0.0000001;
             }
-            CurvilinearTrajectoryError initialError(errorMatrix);
-            FreeTrajectoryState initialFTS(initialParams, initialError);
-
-            const GeomDet* initialLayer = trackerGeometry->idToDet( recHits.back().geographicalId() );
-            const TrajectoryStateOnSurface initialTSOS = thePropagator->propagate(initialFTS,initialLayer->surface()) ;
-
-            if (!initialTSOS.isValid())
-            {
-                break; //continues with the next seeding algorithm
-            }
-
-            const AlgebraicSymMatrix55& m = initialTSOS.localError().matrix();
-            int dim = 5; /// should check if corresponds to m
-            float localErrors[15];
-            int k = 0;
-            for (int i=0; i<dim; ++i)
-            {
-                for (int j=0; j<=i; ++j)
-                {
-                    localErrors[k++] = m(i,j);
-                }
-            }
-            int surfaceSide = static_cast<int>(initialTSOS.surfaceSide());
-            initialState = PTrajectoryStateOnDet( initialTSOS.localParameters(),initialTSOS.globalMomentum().perp(),localErrors, recHits.back().geographicalId().rawId(), surfaceSide);
-            output->push_back(TrajectorySeed(initialState, recHits, PropagationDirection::alongMomentum));
+	    */
+	    std::cout<<"Line399"<<std::endl;
+	    //////////////////////////////////////////////Addition For Make Seed//////////////////////////////////////////
+	    if(seedHitNumbers.size()==2){
+	      std::cout<<"Line413_3seeds"<<std::endl;
+	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit()));
+	    std::cout<<"Line413_2Seeds"<<std::endl;
+	    }
 	    
+	    if(seedHitNumbers.size()==3){
+	      std::cout<<"Line417_3seeds"<<std::endl;
+	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit(),trackerRecHits[seedHitNumbers[2]].hit()));
+	    std::cout<<"Line417_3seeds"<<std::endl;}
+
+	    if(seedHitNumbers.size()==4){
+	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit(),trackerRecHits[seedHitNumbers[2]].hit(),trackerRecHits[seedHitNumbers[3]].hit()));}	    
         }
+	
     } //end loop over simtracks
     
-
+    std::cout<<"Line487_tryingPuttingOutput"<<std::endl;
     e.put(output);
+    std::cout<<"Line489_outputSuccess"<<std::endl;
 }
 
 bool
@@ -462,7 +450,11 @@ TrajectorySeedProducer::testWithRegions(const TrajectorySeedHitCandidate & inner
     Range hitRZ(v-vErr, v+vErr);
     Range crossRange = allowed.intersection(hitRZ);
     if( ! crossRange.empty())
+      // seedCreator->init(**ir,*es_,0);
       return true;
-  }
+    std::cout<<"Line485"<<std::endl;
+    seedCreator->init(**ir,*es_,0);
+    std::cout<<"Line487"<<std::endl;  
+}
   return false;
 }

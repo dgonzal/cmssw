@@ -1,6 +1,7 @@
 
 import FWCore.ParameterSet.Config as cms
-
+from RecoTracker.TkTrackingRegions.GlobalTrackingRegionFromBeamSpot_cfi import *
+from RecoTracker.TkSeedGenerator.SeedFromConsecutiveHitsCreator_cfi import *
 trajectorySeedProducer = cms.EDProducer("TrajectorySeedProducer",
                                         
     simTrackSelection = cms.PSet(
@@ -11,6 +12,9 @@ trajectorySeedProducer = cms.EDProducer("TrajectorySeedProducer",
         maxZ0 = cms.double(-1),
         maxD0 = cms.double(-1),
         ),
+####################################################################################################################################
+ SeedCreatorPSet = cms.PSet(SeedFromConsecutiveHitsCreator),
+####################################################################################################################################
                                         # minimum number of layer crossed (with hits on them) by the simtrack
                                         minLayersCrossed = cms.uint32(0),
                                         
