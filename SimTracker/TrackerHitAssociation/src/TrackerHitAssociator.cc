@@ -379,9 +379,9 @@ void TrackerHitAssociator::associateHitId(const TrackingRecHit & thit, std::vect
 	}
       }
     //check if these are GSRecHits (from FastSim)
-    if(const GSSiTrackerRecHit2DLocalPos * rechit = dynamic_cast<const GSSiTrackerRecHit2DLocalPos *>(&thit))
+    if(const FastTrackerRecHit * rechit = dynamic_cast<const FastTrackerRecHit *>(&thit))
       {
-	simtkid = associateGSRecHit(rechit);
+	simtkid = associateFastRecHit(rechit);
       }  
 }
 
@@ -635,12 +635,12 @@ std::vector<SimHitIdpr> TrackerHitAssociator::associateMultiRecHitId(const SiTra
 }
 
  // fastsim
-std::vector<SimHitIdpr>  TrackerHitAssociator::associateGSRecHit(const GSSiTrackerRecHit2DLocalPos * gsrechit) const
+std::vector<SimHitIdpr>  TrackerHitAssociator::associateFastRecHit(const FastTrackerRecHit * rechit) const
 {
   vector<SimHitIdpr> simtrackid;
   simtrackid.clear();
-  for(size_t index =0;index<gsrechit->nSimTrackIds();++index){
-    SimHitIdpr currentId(gsrechit->simTrackId(index), EncodedEventId(gsrechit->eeId()));
+  for(size_t index =0;index<rechit->nSimTrackIds();++index){
+      SimHitIdpr currentId(rechit->simTrackId(index), EncodedEventId(rechit->simTrackEventId(index)));
     simtrackid.push_back(currentId);
   }
   return simtrackid;
