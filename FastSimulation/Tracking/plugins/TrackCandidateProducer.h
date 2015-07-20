@@ -5,12 +5,13 @@
 #include "FWCore/Utilities/interface/InputTag.h"
 
 #include "DataFormats/TrackCandidate/interface/TrackCandidateCollection.h"
-
 #include "DataFormats/TrackReco/interface/Track.h"
-#include "TrackingTools/PatternTools/interface/Trajectory.h"
-#include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCombination.h"
 #include "SimDataFormats/Track/interface/SimTrackContainer.h"
 #include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
+
+#include "TrackingTools/PatternTools/interface/Trajectory.h"
+#include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
 
 #include "FastSimulation/Tracking/interface/TrajectorySeedHitCandidate.h"
 
@@ -30,6 +31,8 @@ namespace reco {
 
 
 class TrackingRecHit;
+
+
 
 #include <vector>
 
@@ -56,7 +59,7 @@ class TrackCandidateProducer : public edm::stream::EDProducer <>
 
   // tokens & labels
   edm::EDGetTokenT<edm::View<TrajectorySeed> > seedToken;
-  edm::EDGetTokenT<FastTMRecHitCombinations> recHitToken;
+  edm::EDGetTokenT<FastTrackerRecHitCombinations> recHitToken;
   edm::EDGetTokenT<edm::SimVertexContainer> simVertexToken;
   edm::EDGetTokenT<edm::SimTrackContainer> simTrackToken;
   edm::EDGetTokenT<std::vector<bool> > hitMasksToken;

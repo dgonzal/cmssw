@@ -1,3 +1,4 @@
+#include "FastSimulation/Tracking/plugins/TrackCandidateProducer.h"
 #include <memory>
 
 #include "FWCore/Framework/interface/Event.h"
@@ -9,19 +10,16 @@
 #include "DataFormats/Common/interface/OwnVector.h"
 #include "DataFormats/TrackCandidate/interface/TrackCandidateCollection.h"
 #include "DataFormats/TrajectorySeed/interface/TrajectorySeedCollection.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2DCollection.h" 
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2DCollection.h" 
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/TrackReco/interface/TrackExtraFwd.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastMatchedTrackerRecHit.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastProjectedTrackerRecHit.h"
 
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
 #include "Geometry/Records/interface/TrackerTopologyRcd.h"
 
 #include "FastSimulation/Tracking/interface/TrajectorySeedHitCandidate.h"
-//#include "FastSimulation/Tracking/interface/TrackerRecHitSplit.h"
-
-#include "FastSimulation/Tracking/plugins/TrackCandidateProducer.h"
 
 #include <vector>
 #include <map>
@@ -65,7 +63,7 @@ TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf)
   seedToken = consumes<edm::View<TrajectorySeed> >(seedLabel);
 
   edm::InputTag recHitLabel = conf.getParameter<edm::InputTag>("recHits");
-  recHitToken = consumes<FastTMRecHitCombinations>(recHitLabel);
+  recHitToken = consumes<FastTrackerRecHitCombinations>(recHitLabel);
   
   propagatorLabel = conf.getParameter<std::string>("propagator");
 }
@@ -90,7 +88,7 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
   edm::Handle<edm::View<TrajectorySeed> > seeds;
   e.getByToken(seedToken,seeds);
 
-  edm::Handle<FastTMRecHitCombinations> recHitCombinations;
+  edm::Handle<FastTrackerRecHitCombinations> recHitCombinations;
   e.getByToken(recHitToken, recHitCombinations);
 
   edm::Handle<edm::SimVertexContainer> simVertices;
@@ -120,8 +118,8 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     }
 
     // Get the combination of hits that produced the seed
-    int32_t hitCombinationId =  ((const SiTrackerGSMatchedRecHit2D*) (&*(seed.recHits().first)))->hitCombinationId();
-    const FastTMRecHitCombination & recHitCombination = recHitCombinations->at(hitCombinationId);
+    int32_t hitCombinationId =  static_cast<const FastTrackerRecHit &>(*(seed.recHits().first)).hitCombinationId();
+    const FastTrackerRecHitCombination & recHitCombination = recHitCombinations->at(hitCombinationId);
 
     // Count number of crossed layers, apply overlap rejection
     std::vector<TrajectorySeedHitCandidate> recHitCandidates;
@@ -157,14 +155,10 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     // Convert TrajectorySeedHitCandidate to TrackingRecHit and split hits
     edm::OwnVector<TrackingRecHit> trackRecHits;
     for ( unsigned index = 0; index<recHitCandidates.size(); ++index ) {
-      if(splitHits && recHitCandidates[index].matchedHit()->isMatched()){
-	trackRecHits.push_back(recHitCandidates[index].matchedHit()->firstHit().clone());
-	trackRecHits.push_back(recHitCandidates[index].matchedHit()->secondHit().clone());
-      }
-      else {
-	trackRecHits.push_back(recHitCandidates[index].hit()->clone());
-      }
+	if(splitHits)
+	    trackRecHits.push_back(splitHits ? recHitCandidates[index].buildSplitHit() : recHitCandidates[index].hit()->clone());
     }
+
     // reverse order if needed
     // when is this relevant? perhaps for the cases when track finding goes backwards?
     if (seed.direction()==oppositeToMomentum){
@@ -202,3 +196,5 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
   // Save the track candidates
   e.put(output);
 }
+
+
