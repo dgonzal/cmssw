@@ -93,7 +93,7 @@ TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf):
     
     // The name of the hit producer
     edm::InputTag recHitTag = conf.getParameter<edm::InputTag>("recHits");
-    recHitToken = consumes<FastTMRecHitCombinations>(recHitTag);
+    recHitToken = consumes<FastTrackerRecHitCombinations>(recHitTag);
 
     // read Layers
     std::vector<std::string> layerStringList = conf.getParameter<std::vector<std::string>>("layerList");
@@ -390,7 +390,7 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
     edm::Handle<edm::SimVertexContainer> theSimVtx;
     e.getByToken(simVertexToken,theSimVtx);
     
-    edm::Handle<FastTMRecHitCombinations> recHitCombinations;
+    edm::Handle<FastTrackerRecHitCombinations> recHitCombinations;
     e.getByToken(recHitToken, recHitCombinations);
 
     std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};

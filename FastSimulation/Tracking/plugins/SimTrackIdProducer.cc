@@ -20,10 +20,9 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "DataFormats/Common/interface/Handle.h"
 #include "DataFormats/Common/interface/OwnVector.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2DCollection.h" 
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2DCollection.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "FastSimulation/Tracking/plugins/SimTrackIdProducer.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHit.h"
 #include <vector>
 #include <stdio.h> 
 
@@ -94,16 +93,9 @@ SimTrackIdProducer::produce(edm::Event& e, const edm::EventSetup& es)
     }
     if(track.chi2()>maxChi2_) continue ; 
     
-    const TrackingRecHit * hit = *(track.recHitsBegin());
-      if (hit)
-      {
-          const SiTrackerGSMatchedRecHit2D* fsimhit = dynamic_cast<const SiTrackerGSMatchedRecHit2D*>(hit);
-          if (fsimhit)
-          {
-              SimTrackIds->push_back(fsimhit->simTrackId(0));
-          }
-      }
-      
+    const auto hit = track.recHitsBegin();
+    if (hit!=track.recHitsEnd() && trackerHitRTTI::isFast(**hit))
+	SimTrackIds->push_back(static_cast<const FastTrackerRecHit *>(*hit)->simTrackId(0));
   }
   e.put(SimTrackIds);  
 }
