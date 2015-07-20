@@ -6,3 +6,16 @@ namespace {
 }
 
 OmniClusterRef const & FastTrackerRecHit::firstClusterRef() const { return nullRef;}
+
+bool FastTrackerRecHit::sharesInput( const TrackingRecHit* other, 
+				     SharedInputType what) const
+{
+    if(!trackerHitRTTI::isFast(*other) )
+	return false;
+    
+    const FastTrackerRecHit * otherCast = static_cast<const FastTrackerRecHit *>(other);
+    if(what==all)
+	return(this->sameId(otherCast,0) && this->sameId(otherCast,1));
+    else
+	return this->sameId(otherCast,0) || (this->nIds() > 0 && this->sameId(otherCast,1));
+}
