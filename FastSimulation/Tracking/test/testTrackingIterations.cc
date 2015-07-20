@@ -17,6 +17,9 @@
 
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHit.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCombination.h"
+
 
 #include "SimGeneral/HepPDTRecord/interface/ParticleDataTable.h"
 #include "FastSimulation/Event/interface/FSimEvent.h"
@@ -377,7 +380,7 @@ testTrackingIterations::analyze(const edm::Event& iEvent, const edm::EventSetup&
   mySimEvent[1]->fill( *fastSimTracks, *fastSimVertices );
 
   // Get the GS RecHits
-  edm::Handle<FastTMRecHitCombinations> recHitCombinations;
+  edm::Handle<FastTrackerRecHitCombinations> recHitCombinations;
   iEvent.getByLabel("siTrackerGaussianSmearingRecHits",recHitCombinations);
   TrajectorySeedHitCandidate theFirstSeedingTrackerRecHit;
 
@@ -542,7 +545,7 @@ testTrackingIterations::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	//	theGeomDet = theGeometry->idToDet(theDetId);
 	theLayerNumber=tTopo->layer(theDetId);
 	if(hit==0){
-	  const SiTrackerGSMatchedRecHit2D * theFirstSeedingRecHit = (const SiTrackerGSMatchedRecHit2D*) (&(*(ihit)));
+	  const FastTrackerRecHit * theFirstSeedingRecHit = (const FastTrackerRecHit*) (&(*(ihit)));
 	  firstID = theFirstSeedingRecHit->simTrackId(0);
 	  firstSubDetId =  theSubDetId;
 	  firstLayerNumber = theLayerNumber;	
@@ -648,7 +651,7 @@ testTrackingIterations::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	theLayerNumber=tTopo->layer(theDetId);
 
 	if(hit==0){
-	  const SiTrackerGSMatchedRecHit2D * theFirstSeedingRecHit = (const SiTrackerGSMatchedRecHit2D*) (&(*(ihit)));
+	  const FastTrackerRecHit * theFirstSeedingRecHit = (const FastTrackerRecHit*) (&(*(ihit)));
 	  firstID = theFirstSeedingRecHit->hitCombinationId();
 	  firstSubDetId =  theSubDetId;
 	  firstLayerNumber = theLayerNumber;	
