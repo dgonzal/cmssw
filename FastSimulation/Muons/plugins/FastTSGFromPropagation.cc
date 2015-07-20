@@ -39,6 +39,8 @@
 #include "TrackingTools/TransientTrackingRecHit/interface/GenericTransientTrackingRecHit.h"
 #include "TrackingTools/Records/interface/TransientRecHitRecord.h"
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCombination.h"
+
 using namespace std;
 
 FastTSGFromPropagation::FastTSGFromPropagation(const edm::ParameterSet& iConfig,edm::ConsumesCollector& iC) : FastTSGFromPropagation(iConfig, nullptr, iC) {
@@ -48,7 +50,7 @@ FastTSGFromPropagation::FastTSGFromPropagation(const edm::ParameterSet& iConfig,
   theCategory("FastSimulation|Muons|FastTSGFromPropagation"),
   theTkLayerMeasurements(), theTracker(), theNavigation(), theService(service), theUpdator(), theEstimator(), theSigmaZ(0.0), theConfig (iConfig),
   theSimTrackCollectionToken_(iC.consumes<edm::SimTrackContainer>(theConfig.getParameter<edm::InputTag>("SimTrackCollectionLabel"))),
-  recHitCombinationsToken_(iC.consumes<FastTMRecHitCombinations>(theConfig.getParameter<edm::InputTag>("HitProducer"))),
+  recHitCombinationsToken_(iC.consumes<FastTrackerRecHitCombinations>(theConfig.getParameter<edm::InputTag>("HitProducer"))),
   beamSpot_(iC.consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpot"))),
   theMeasurementTrackerEventToken_(iC.consumes<MeasurementTrackerEvent>(iConfig.getParameter<edm::InputTag>("MeasurementTrackerEvent"))) {
 }
