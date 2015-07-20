@@ -22,7 +22,8 @@ class FastSingleTrackerRecHit : public FastTrackerRecHit {
 
     virtual FastSingleTrackerRecHit * clone() const {FastSingleTrackerRecHit * p =  new FastSingleTrackerRecHit( * this); p->load(); return p;}
 
-    int32_t                      id()                      const { return id_;}                                             ///< see setId(int32_t id)
+    size_t                       nIds()                    const { return 1;}
+    int32_t                      id(size_t i =0)             const { return i == 0 ? id_ : -1;}
     int32_t                      eventId()                 const { return eventId_;}                                        ///< see setId(int32_t id)
     size_t                       nSimTrackIds()            const { return simTrackIds_.size();}                             ///< see addSimTrackId(int32_t simTrackId)
     int32_t                      simTrackId(size_t i)      const { return i < simTrackIds_.size() ? simTrackIds_[i] : -1;}  ///< see addSimTrackId(int32_t simTrackId)

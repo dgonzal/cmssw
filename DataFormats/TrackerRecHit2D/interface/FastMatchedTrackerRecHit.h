@@ -35,6 +35,9 @@ class FastMatchedTrackerRecHit : public FastTrackerRecHit{
 	componentStereo_.setHitCombinationId(hitCombinationId);
     }
 
+    size_t                       nIds()                    const { return 2;}
+    int32_t                      id(size_t i = 0)          const { return i==0 ? monoHit().id() : stereoHit().id(); }
+    
     size_t                       nSimTrackIds()            const { return componentMono_.nSimTrackIds() + componentStereo_.nSimTrackIds();}                             ///< see addSimTrackId(int32_t simTrackId)
     int32_t                      simTrackId(size_t i)      const { 
 	if(i < componentMono_.nSimTrackIds()) 
@@ -53,6 +56,7 @@ class FastMatchedTrackerRecHit : public FastTrackerRecHit{
     const FastTrackerRecHit &   stereoHit()              const { return componentStereo_;}
     const FastTrackerRecHit &   firstHit()               const { return stereoHitFirst_ ? componentStereo_ : componentMono_;}
     const FastTrackerRecHit &   secondHit()              const { return stereoHitFirst_ ? componentMono_ : componentStereo_;}
+    
 
     void setStereoLayerFirst(bool stereoHitFirst = true){stereoHitFirst_ = stereoHitFirst;}
     void setEventId(int32_t eventId){componentMono_.setEventId(eventId);componentStereo_.setEventId(eventId);}
