@@ -19,15 +19,17 @@ lowPtTripletStepSeeds = FastSimulation.Tracking.TrajectorySeedProducer_cfi.traje
         skipSimTrackIds = [
             cms.InputTag("detachedTripletStepSimTrackIds"),
             cms.InputTag("lowPtTripletStepSimTrackIds")],
-        pTMin = 0.1,
-        maxD0 = 5.0,
-        maxZ0 = 50
+        #pTMin = 0.1,
+        #maxD0 = 5.0,
+        #maxZ0 = 50
+        pTMin = 0,
+        maxD0 = -1,
+        maxZ0 = -1,
     ),
     minLayersCrossed = 3,
-    nSigmaZ = RecoTracker.IterativeTracking.LowPtTripletStep_cff.lowPtTripletStepSeeds.RegionFactoryPSet.RegionPSet.nSigmaZ,
-    ptMin = RecoTracker.IterativeTracking.LowPtTripletStep_cff.lowPtTripletStepSeeds.RegionFactoryPSet.RegionPSet.ptMin,
-    originRadius = RecoTracker.IterativeTracking.LowPtTripletStep_cff.lowPtTripletStepSeeds.RegionFactoryPSet.RegionPSet.originRadius,
-    layerList = RecoTracker.IterativeTracking.LowPtTripletStep_cff.lowPtTripletStepSeedLayers.layerList.value()
+    layerList = RecoTracker.IterativeTracking.LowPtTripletStep_cff.lowPtTripletStepSeedLayers.layerList.value(),
+    RegionFactoryPSet = RecoTracker.IterativeTracking.LowPtTripletStep_cff.lowPtTripletStepSeeds.RegionFactoryPSet,
+    MeasurementTrackerEvent = cms.InputTag("MeasurementTrackerEvent"),
 )
 
 # track candidates

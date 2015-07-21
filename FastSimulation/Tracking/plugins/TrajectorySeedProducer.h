@@ -13,6 +13,8 @@
 #include "SimDataFormats/Track/interface/SimTrackContainer.h"
 #include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
 #include "FastSimulation/Tracking/interface/TrajectorySeedHitCandidate.h"
+#include "RecoTracker/TkSeedGenerator/interface/SeedCreatorFactory.h"
+#include "RecoTracker/TkSeedGenerator/interface/SeedCreator.h"
 
 #include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2DCollection.h"
 #include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2DCollection.h"
@@ -23,6 +25,7 @@
 	 //#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 	 //#include "DataFormats/TrackReco/interface/TrackFwd.h"
 
+#include "RecoTracker/TkTrackingRegions/interface/TrackingRegionProducer.h"
 #include <memory>
 #include <vector>
 #include <sstream>
@@ -32,6 +35,7 @@ class MagneticField;
 class MagneticFieldMap;
 class TrackerGeometry;
 class PropagatorWithMaterial;
+class MeasurementTrackerEvent;
 
 class TrajectorySeedProducer:
     public edm::stream::EDProducer<>
@@ -43,26 +47,18 @@ class TrajectorySeedProducer:
         const MagneticFieldMap* magneticFieldMap;
         const TrackerGeometry* trackerGeometry;
         const TrackerTopology* trackerTopology;
-
+	using ConstRecHitPointer =  BaseTrackerRecHit const *;
         std::shared_ptr<PropagatorWithMaterial> thePropagator;
 
         double simTrack_pTMin;
         double simTrack_maxD0;
         double simTrack_maxZ0;
-        
+	SeedCreator *  seedCreator;        
         unsigned int minLayersCrossed;
-
-        std::vector<std::vector<TrackingLayer>> seedingLayers;
-
-        double originRadius;
-        double ptMin;
-        double originHalfLength;
-        double nSigmaZ;
-        
-        bool testBeamspotCompatibility;
-        const reco::BeamSpot* beamSpot;
-        bool testPrimaryVertexCompatibility;
-        const reco::VertexCollection* primaryVertices;
+	//typedef TrackingRecHit const *     ConstRecHitPointer;
+	//typedef TrajectorySeedProducer const *     ConstRecHitPointer;
+	//typedef TrackingRecHit::ConstRecHitPointer ConstRecHitPointer;
+        std::vector<std::vector<TrackingLayer>> seedingLayers;    
         // tokens
         edm::EDGetTokenT<reco::BeamSpot> beamSpotToken;
         edm::EDGetTokenT<edm::SimTrackContainer> simTrackToken;
@@ -182,6 +178,9 @@ class TrajectorySeedProducer:
             bool forward
     ) const;
 
+    // lv
+    bool testWithRegions(const TrajectorySeedHitCandidate & innerHit,const TrajectorySeedHitCandidate & outerHit) const;
+    
     //! method inserts hit into the tree structure at an empty position. 
     /*!
     \param trackerRecHits list of all TrackerRecHits.
@@ -196,8 +195,14 @@ class TrajectorySeedProducer:
             const SeedingNode<TrackingLayer>* node, 
             unsigned int trackerHit
     ) const;
-
-
+    
+    // lv
+    typedef std::vector<TrackingRegion* > Regions;
+    Regions regions;
+    std::unique_ptr<TrackingRegionProducer> theRegionProducer;
+    edm::EDGetTokenT<MeasurementTrackerEvent> measurementTrackerEventToken;
+    const MeasurementTrackerEvent * measurementTrackerEvent;
+    const edm::EventSetup * es_;
 };
 
 #endif
