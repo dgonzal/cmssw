@@ -13,7 +13,7 @@ trajectorySeedProducer = cms.EDProducer("TrajectorySeedProducer",
         maxD0 = cms.double(-1),
         ),
 ####################################################################################################################################
- SeedCreatorPSet = cms.PSet(SeedFromConsecutiveHitsCreator),
+ SeedCreatorPSet = cms.PSet(SeedFromConsecutiveHitsCreator.clone(TTRHBuilder = cms.string("WithoutRefit"))),
 ####################################################################################################################################
                                         # minimum number of layer crossed (with hits on them) by the simtrack
                                         minLayersCrossed = cms.uint32(0),

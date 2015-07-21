@@ -100,6 +100,10 @@ TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf):
     theRegionProducer.reset(TrackingRegionProducerFactory::get()->create(regfactoryName,regfactoryPSet, consumesCollector()));
     measurementTrackerEventToken = consumes<MeasurementTrackerEvent>(conf.getParameter<edm::InputTag>("MeasurementTrackerEvent"));    
   }
+  const edm::ParameterSet & seedCreatorPSet = conf.getParameter<edm::ParameterSet>("SeedCreatorPSet");
+  std::string seedCreatorName = seedCreatorPSet.getParameter<std::string>("ComponentName");
+  seedCreator.reset(SeedCreatorFactory::get()->create( seedCreatorName, seedCreatorPSet));
+  
 }
 
 void
@@ -446,9 +450,12 @@ TrajectorySeedProducer::testWithRegions(const TrajectorySeedHitCandidate & inner
     Range hitRZ(v-vErr, v+vErr);
     Range crossRange = allowed.intersection(hitRZ);
     if( ! crossRange.empty()){
-
-      seedCreator->init(**ir,*es_,0);
-      return true;}
+	std::cout << "init seed creator"<< std::endl;
+	std::cout << "ptmin: " << (**ir).ptMin() << std::endl;
+	std::cout << "" << std::endl;
+	seedCreator->init(**ir,*es_,0);
+	std::cout << "done" << std::endl;
+	return true;}
     std::cout<<"Line485"<<std::endl;
     //seedCreator->init(**ir,*es_,0);
     std::cout<<"Line487"<<std::endl;  

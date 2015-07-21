@@ -53,7 +53,7 @@ class TrajectorySeedProducer:
         double simTrack_pTMin;
         double simTrack_maxD0;
         double simTrack_maxZ0;
-	SeedCreator *  seedCreator;        
+	std::unique_ptr<SeedCreator> seedCreator;
         unsigned int minLayersCrossed;
 	//typedef TrackingRecHit const *     ConstRecHitPointer;
 	//typedef TrajectorySeedProducer const *     ConstRecHitPointer;
