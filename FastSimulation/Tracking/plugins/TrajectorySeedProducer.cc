@@ -303,6 +303,11 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
     std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
     //TrajectorySeedCollection SeedColl;
     std::cout<<"Line305"<<std::endl;
+    //std::cout<<output.size()<<std::endl;
+    output.reset(new TrajectorySeedCollection);
+    //std::cout<<output.size()<<std::endl;
+    
+
     //if no hits -> directly write empty collection
     if(theGSRecHits->size() == 0)
     {
@@ -390,33 +395,24 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
 	  e.getByToken(measurementTrackerEventToken,measurementTrackerEventHandle);
 	  measurementTrackerEvent = measurementTrackerEventHandle.product();
 	}
-	std::cout<<"Line388"<<std::endl;
+	std::cout<<"Line398"<<std::endl;
         std::vector<unsigned int> seedHitNumbers = iterateHits(0,trackerRecHits,hitIndicesInTree,true);
-	//std::map<const TrackingRecHit *, ConstRecHitPointer> hitMap;
+	std::cout<<"Line400"<<std::endl;	
+//std::map<const TrackingRecHit *, ConstRecHitPointer> hitMap;
         if (seedHitNumbers.size()>0)
         {
-	  //edm::OwnVector<TrackingRecHit> recHits;
-	    /*
-            for ( unsigned ihit=0; ihit<seedHitNumbers.size(); ++ihit )
-            {
-                TrackingRecHit* aTrackingRecHit = trackerRecHits[seedHitNumbers[ihit]].hit()->clone();
-                recHits.push_back(aTrackingRecHit);
-		hitMap[aTrackingRecHit]=&recHits[ihit];
-
-            }
-	    */
-	    std::cout<<"Line399"<<std::endl;
+	    std::cout<<"Line404"<<std::endl;
 	    //////////////////////////////////////////////Addition For Make Seed//////////////////////////////////////////
 	    if(seedHitNumbers.size()==2){
-	      std::cout<<"Line413_3seeds"<<std::endl;
+	      std::cout<<"Line407_3seeds"<<std::endl;
 	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit()));
-	    std::cout<<"Line413_2Seeds"<<std::endl;
+	    std::cout<<"Line409_2Seeds"<<std::endl;
 	    }
 	    
 	    if(seedHitNumbers.size()==3){
-	      std::cout<<"Line417_3seeds"<<std::endl;
+	      std::cout<<"Line413_3seeds"<<std::endl;
 	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit(),trackerRecHits[seedHitNumbers[2]].hit()));
-	    std::cout<<"Line417_3seeds"<<std::endl;}
+	    std::cout<<"Line413_3seeds"<<std::endl;}
 
 	    if(seedHitNumbers.size()==4){
 	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit(),trackerRecHits[seedHitNumbers[2]].hit(),trackerRecHits[seedHitNumbers[3]].hit()));}	    
@@ -449,11 +445,12 @@ TrajectorySeedProducer::testWithRegions(const TrajectorySeedHitCandidate & inner
     float vErr = nSigmaRZ * dv;
     Range hitRZ(v-vErr, v+vErr);
     Range crossRange = allowed.intersection(hitRZ);
-    if( ! crossRange.empty())
-      // seedCreator->init(**ir,*es_,0);
-      return true;
+    if( ! crossRange.empty()){
+
+      seedCreator->init(**ir,*es_,0);
+      return true;}
     std::cout<<"Line485"<<std::endl;
-    seedCreator->init(**ir,*es_,0);
+    //seedCreator->init(**ir,*es_,0);
     std::cout<<"Line487"<<std::endl;  
 }
   return false;
