@@ -17,14 +17,14 @@ void FastTrackerRecHitMatcher::match(  const FastSingleTrackerRecHitCombination 
 				       const TrackerGeometry & geometry,
 				       FastTrackerRecHitCombination & matchedRecHits){
 
-    FastSingleTrackerRecHitCombination::const_iterator rit = recHits.begin();
     FastSingleTrackerRecHitCombination::const_iterator firstRecHit = recHits.begin();
     FastSingleTrackerRecHitCombination::const_iterator lastRecHit = recHits.end();
     
     //loop over rechits in track
-    for (unsigned recHitIndex = 0;recHitIndex < recHits.size();++recHitIndex){
-
-	const FastSingleTrackerRecHit & recHit = recHits[recHitIndex];
+    unsigned recHitIndex = 0;
+    for (auto rit = recHits.begin();
+	 rit!=lastRecHit;
+	 ++rit,recHitIndex++){
 
 	DetId detid = rit->geographicalId();
 	unsigned int subdet = detid.subdetId();
@@ -37,7 +37,7 @@ void FastTrackerRecHitMatcher::match(  const FastSingleTrackerRecHitCombination 
 	    if(specDetId.glued()){
 
 		// get the track direction from the simhit
-		LocalVector simtrackdir = simHits[recHit.simHitId()].localDirection();	    
+		LocalVector simtrackdir = simHits[rit->simHitId()].localDirection();	    
 
 		const GluedGeomDet* gluedDet = (const GluedGeomDet*)geometry.idToDet(DetId(specDetId.glued()));
 		const StripGeomDetUnit* stripdet =(StripGeomDetUnit*) gluedDet->stereoDet();
