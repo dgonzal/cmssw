@@ -6,18 +6,29 @@
 #include "DataFormats/GeometryVector/interface/LocalPoint.h"
 #include "Geometry/TrackerGeometryBuilder/interface/GluedGeomDet.h"
 #include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitFwd.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCombination.h"
+#include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 
-//class GluedGeomDet;
-//class GeomDet;
-//class GeomDetUnit;
+class TrackerGeometry;
 
 class FastTrackerRecHitMatcher {
+
     public:
 
-    typedef std::pair<LocalPoint,LocalPoint>                   StripPosition; 
 
     FastTrackerRecHitMatcher() {}
     ~FastTrackerRecHitMatcher() {}
+
+
+    void match(  const FastSingleTrackerRecHitCombination & recHits, 
+		 const edm::PSimHitContainer & simHits,
+		 const TrackerGeometry & geometry,
+		 FastTrackerRecHitCombination & matchedRecHits);
+
+    private:
+	       
+    typedef std::pair<LocalPoint,LocalPoint>                   StripPosition; 
 
     FastMatchedTrackerRecHit match( const FastSingleTrackerRecHit *monoRH,
 				    const FastSingleTrackerRecHit *stereoRH,

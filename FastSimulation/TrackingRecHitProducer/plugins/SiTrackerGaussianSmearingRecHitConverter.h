@@ -60,19 +60,14 @@ class SiTrackerGaussianSmearingRecHitConverter : public edm::stream::EDProducer 
   // Begin Run
   virtual void beginRun(edm::Run const& run, const edm::EventSetup & es) override;
   
-  //  void smearHits(MixCollection<PSimHit>& input,
   void smearHits(const edm::PSimHitContainer& input,
-		 //  void smearHits(edm::Handle<std::vector<PSimHit> >& input,
                  std::map<unsigned, FastSingleTrackerRecHitCombination >& theRecHits,
 		 const TrackerTopology *tTopo,
                  RandomEngineAndDistribution const*);
 
- void  matchHits( std::map<unsigned, FastSingleTrackerRecHitCombination>& theRecHits, 
+ void  matchHits( const std::map<unsigned, FastSingleTrackerRecHitCombination>& theRecHits, 
+		  const edm::PSimHitContainer & simHits,
 		  std::map<unsigned, FastTrackerRecHitCombination>& matchedMap);//,
-		  //		  MixCollection<PSimHit>& simhits);
-   //		  const edm::PSimHitContainer& simhits);
-		  //		  std::vector<PSimHit>& simhits); 
-		  //		  edm::Handle<std::vector<PSimHit> >& simhits);
 
   void loadMatchedRecHits(std::map<unsigned,FastTrackerRecHitCombination>& theRecHits, 
 			  FastTrackerRecHitCombinations & recHitCombinations) const;
@@ -231,7 +226,6 @@ class SiTrackerGaussianSmearingRecHitConverter : public edm::stream::EDProducer 
   SiStripGaussianSmearingRecHitConverterAlgorithm* theSiStripErrorParametrization;
 
   typedef edm::PSimHitContainer::const_iterator SimHiterator;
-  std::vector<SimHiterator> correspondingSimHit;
 
 };
 
