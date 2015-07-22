@@ -4,6 +4,7 @@
 #include "Geometry/CommonDetUnit/interface/GeomDetUnit.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/SiStripDetId/interface/StripSubdetector.h"
+#include "DataFormats/TrackingRecHit/interface/TrackingRecHitFwd.h"
 #include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHit.h"
 #include "DataFormats/TrackerRecHit2D/interface/FastProjectedTrackerRecHit.h"
 #include "DataFormats/TrackerRecHit2D/interface/FastMatchedTrackerRecHit.h"
@@ -154,28 +155,28 @@ public:
       aHit.hit()->localPosition().z() != this->hit()->localPosition().z();
   }
 
-  inline FastTrackerRecHit * buildSplitHit() const {
+  void buildSplitHit(TrackingRecHitCollection & recHitCombination) const {
       if(hit()->dimension()==1 || hit()->isPixel())
-	  return hit()->clone();
+	  recHitCombination.push_back( hit()->clone() );
       
       if(hit()->isProjected())
-	  return buildSplitHit(static_cast<const FastProjectedTrackerRecHit *>(hit())->originalHit());
+	  recHitCombination.push_back(buildSplitHit(static_cast<const FastProjectedTrackerRecHit *>(hit())->originalHit()));
       
       if(hit()->isMatched()){
-	  return buildSplitHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->firstHit());
-	  return buildSplitHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->secondHit());
+	  recHitCombination.push_back(buildSplitHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->firstHit()));
+	  recHitCombination.push_back(buildSplitHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->secondHit()));
       }
       
-      return buildSplitHit(*hit());
+      recHitCombination.push_back(buildSplitHit(*hit()));
   }
   
   inline FastSingleTrackerRecHit * buildSplitHit (const FastTrackerRecHit & hit) const {
-      if(hit.detUnit()->type().isEndcap())
-	  return new FastSingleTrackerRecHit(hit.localPositionFast(),hit.localPositionErrorFast(),*hit.det(),fastTrackerRecHitType::siStrip2D);
-      else
-	  return new FastSingleTrackerRecHit(hit.localPositionFast(),hit.localPositionErrorFast(),*hit.det(),fastTrackerRecHitType::siStrip1D);
-  }                  
-
+      return new FastSingleTrackerRecHit(hit.localPositionFast(),
+					 hit.localPositionErrorFast(),
+					 *hit.det(),
+					 hit.detUnit()->type().isEndcap() ? fastTrackerRecHitType::siStrip2D : fastTrackerRecHitType::siStrip1D);
+  }
+  
 
  private:
   

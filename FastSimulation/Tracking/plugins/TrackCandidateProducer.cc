@@ -135,7 +135,9 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     edm::OwnVector<TrackingRecHit> trackRecHits;
     for ( unsigned index = 0; index<recHitCandidates.size(); ++index ) {
 	if(splitHits)
-	    trackRecHits.push_back(splitHits ? recHitCandidates[index].buildSplitHit() : recHitCandidates[index].hit()->clone());
+	    recHitCandidates[index].buildSplitHit(trackRecHits);
+	else
+	    trackRecHits.push_back(recHitCandidates[index].hit()->clone());
     }
 
     // reverse order if needed
