@@ -35,23 +35,13 @@ class FastMatchedTrackerRecHit : public FastTrackerRecHit{
 	componentStereo_.setHitCombinationId(hitCombinationId);
     }
 
-    size_t                       nIds()                    const { return 2;}
-    int32_t                      id(size_t i = 0)          const { return i==0 ? monoHit().id() : stereoHit().id(); }
-    int32_t                      eventId(size_t i = 0)     const { return i==0 ? monoHit().eventId() : stereoHit().eventId(); }
+    size_t    nIds()                    const { return 2;}
+    int32_t   id(size_t i = 0)          const { return i==0 ? monoHit().id() : stereoHit().id(); }
+    int32_t   eventId(size_t i = 0)     const { return i==0 ? monoHit().eventId() : stereoHit().eventId(); }
     
-    size_t                       nSimTrackIds()            const { return componentMono_.nSimTrackIds() + componentStereo_.nSimTrackIds();}                             ///< see addSimTrackId(int32_t simTrackId)
-    int32_t                      simTrackId(size_t i)      const { 
-	if(i < componentMono_.nSimTrackIds()) 
-	    return componentMono_.simTrackId(i);
-	i-=componentMono_.nSimTrackIds();
-	return componentStereo_.simTrackId(i);
-    }
-    int32_t                      simTrackEventId(size_t i) const { 
-	if(i < componentMono_.nSimTrackIds()) 
-	    return componentMono_.simTrackEventId(i);
-	i-=componentMono_.nSimTrackIds();
-	return componentStereo_.simTrackEventId(i);
-    }
+    size_t    nSimTrackIds()            const { return componentMono_.nSimTrackIds() + componentStereo_.nSimTrackIds();}                             ///< see addSimTrackId(int32_t simTrackId)
+    int32_t   simTrackId(size_t i)      const { return i < componentMono_.nSimTrackIds() ? componentMono_.simTrackId(i) : componentStereo_.simTrackId(i-componentMono_.nSimTrackIds()); }
+    int32_t   simTrackEventId(size_t i) const { return i < componentMono_.nSimTrackIds() ? componentMono_.simTrackEventId(i) : componentStereo_.simTrackEventId(i-componentMono_.nSimTrackIds()); }
     
     const FastTrackerRecHit &   monoHit()                const { return componentMono_;}
     const FastTrackerRecHit &   stereoHit()              const { return componentStereo_;}
