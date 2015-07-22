@@ -7,7 +7,145 @@
 #include "DataFormats/TrackerRecHit2D/interface/FastMatchedTrackerRecHit.h"
 #include "DataFormats/TrackerRecHit2D/interface/FastProjectedTrackerRecHit.h"
 #include "DataFormats/TrackerRecHit2D/interface/FastSingleTrackerRecHit.h"
+#include "DataFormats/SiStripDetId/interface/StripSubdetector.h"
+#include "Geometry/TrackerGeometryBuilder/interface/StripGeomDetUnit.h"
 #include <cfloat>
+
+
+void FastTrackerRecHitMatcher::match(  const FastSingleTrackerRecHitCombination & recHits, 
+				       const edm::PSimHitContainer & simHits,
+				       const TrackerGeometry & geometry,
+				       FastTrackerRecHitCombination & matchedRecHits){
+
+    FastSingleTrackerRecHitCombination::const_iterator rit = recHits.begin();
+    FastSingleTrackerRecHitCombination::const_iterator firstRecHit = recHits.begin();
+    FastSingleTrackerRecHitCombination::const_iterator lastRecHit = recHits.end();
+    
+    //loop over rechits in track
+    for (unsigned recHitIndex = 0;recHitIndex < recHits.size();++recHitIndex){
+
+	const FastSingleTrackerRecHit & recHit = recHits[recHitIndex];
+
+	DetId detid = rit->geographicalId();
+	unsigned int subdet = detid.subdetId();
+
+	if(subdet>2){
+
+	    StripSubdetector specDetId=StripSubdetector(detid);
+
+	    // if this is on a glued, then place only one hit in vector
+	    if(specDetId.glued()){
+
+		// get the track direction from the simhit
+		LocalVector simtrackdir = simHits[recHit.simHitId()].localDirection();	    
+
+		const GluedGeomDet* gluedDet = (const GluedGeomDet*)geometry.idToDet(DetId(specDetId.glued()));
+		const StripGeomDetUnit* stripdet =(StripGeomDetUnit*) gluedDet->stereoDet();
+	  
+		// global direction of track
+		GlobalVector globaldir= stripdet->surface().toGlobal(simtrackdir);
+		LocalVector gluedsimtrackdir=gluedDet->surface().toLocal(globaldir);
+
+		// get partner layer, it is the next one or previous one in the vector
+		FastSingleTrackerRecHitCombination::const_iterator partner = rit;
+		FastSingleTrackerRecHitCombination::const_iterator partnerNext = rit;
+		FastSingleTrackerRecHitCombination::const_iterator partnerPrev = rit;
+		partnerNext++; partnerPrev--;
+	  
+	  
+		// check if this hit is on a stereo layer (== the second layer of a double sided module)
+		if(   specDetId.stereo()  ) {
+	
+		    int partnersFound = 0;
+		    // check next one in vector
+		    // safety check first
+		    if(partnerNext != recHits.end() ) 
+			if( StripSubdetector( partnerNext->geographicalId() ).partnerDetId() == detid.rawId() )	{
+			    partner= partnerNext;
+			    partnersFound++;
+			}
+		    // check prevoius one in vector     
+		    if( rit !=  recHits.begin()) 
+			if(  StripSubdetector( partnerPrev->geographicalId() ).partnerDetId() == detid.rawId() ) {
+			    partnersFound++;
+			    partner= partnerPrev;
+			}
+	    
+	    
+		    // in case partner has not been found this way, need to loop over all rechits in track to be sure
+		    // (rare cases fortunately)
+		    if(partnersFound==0){
+			for(FastSingleTrackerRecHitCombination::const_iterator iter = firstRecHit; iter != lastRecHit; ++iter  ){
+			    if( StripSubdetector( iter->geographicalId() ).partnerDetId() == detid.rawId()){
+				partnersFound++;
+				partner = iter;
+			    }
+			}
+		    }
+
+		    if(partnersFound == 1) {
+			FastMatchedTrackerRecHit theMatchedHit = match( &(*partner),  &(*rit),  gluedDet  , gluedsimtrackdir );
+			if(partner == partnerNext)
+			    theMatchedHit.setStereoLayerFirst();
+			matchedRecHits.push_back( theMatchedHit );
+		    } 
+		    else{
+			// no partner to match, place projected one in map
+			FastProjectedTrackerRecHit theProjectedHit = projectOnly( &(*rit), geometry.idToDet(detid),gluedDet, gluedsimtrackdir  );
+			matchedRecHits.push_back( theProjectedHit );
+			//there is no partner here
+		    }
+		} // end if stereo
+		else {   // we are on a mono layer
+		    // usually this hit is already matched, but not if stereo hit is missing (rare cases)
+		    // check if stereo hit is missing
+		    int partnersFound = 0;
+		    // check next one in vector
+		    // safety check first
+		    if(partnerNext != recHits.end() ) 
+			if( StripSubdetector( partnerNext->geographicalId() ).partnerDetId() == detid.rawId() )	{
+			    partnersFound++;
+			}
+		    // check prevoius one in vector     
+		    if( rit !=  recHits.begin()) 
+			if(  StripSubdetector( partnerPrev->geographicalId() ).partnerDetId() == detid.rawId() ) {
+			    partnersFound++;
+			}
+
+		    if(partnersFound==0){ // no partner hit found this way, need to iterate over all hits to be sure (rare cases)
+			for(FastSingleTrackerRecHitCombination::const_iterator iter = firstRecHit; iter != lastRecHit; ++iter  ){
+			    if( StripSubdetector( iter->geographicalId() ).partnerDetId() == detid.rawId()){
+				partnersFound++;
+			    }
+			}
+		    }	    
+	    
+	    
+		    if(partnersFound==0){ // no partner hit found 
+			// no partner to match, place projected one one in map
+			FastProjectedTrackerRecHit theProjectedHit = 
+			    projectOnly( &(*rit), geometry.idToDet(detid),gluedDet, gluedsimtrackdir  );
+			matchedRecHits.push_back( theProjectedHit );
+		    }	    
+		} // end we are on a a mono layer
+	    } // end if glued 
+	    else{ 
+		matchedRecHits.push_back( *rit ); // if not glued place the original one in vector 
+	    }
+	
+	}// end if strip
+	else {
+
+	    matchedRecHits.push_back( *rit );  // if not strip place the original one in vector
+	}
+      
+    } // end loop over rechits
+    
+}
+
+
+
+
 
 FastMatchedTrackerRecHit FastTrackerRecHitMatcher::match(const FastSingleTrackerRecHit *monoRH,
 							 const FastSingleTrackerRecHit *stereoRH,

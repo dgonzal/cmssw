@@ -11,12 +11,15 @@ class FastSingleTrackerRecHit : public FastTrackerRecHit {
     FastSingleTrackerRecHit ()
 	: FastTrackerRecHit()
 	, id_(-1)
-	, eventId_(0) {}
+	, eventId_(0) 
+	, simHitId_(-1){}
+    
 
     FastSingleTrackerRecHit (const LocalPoint& p, const LocalError&e, GeomDet const & idet,fastTrackerRecHitType::HitType hitType)
 	: FastTrackerRecHit(p,e,idet,hitType)
 	, id_(-1)
-	, eventId_(0) {}
+	, eventId_(0) 
+	, simHitId_(-1){}
     
     public:
 
@@ -29,6 +32,7 @@ class FastSingleTrackerRecHit : public FastTrackerRecHit {
     size_t                       nSimTrackIds()            const { return simTrackIds_.size();}                             ///< see addSimTrackId(int32_t simTrackId)
     int32_t                      simTrackId(size_t i)      const { return i < simTrackIds_.size() ? simTrackIds_[i] : -1;}  ///< see addSimTrackId(int32_t simTrackId)
     int32_t                      simTrackEventId(size_t i) const { return i < simTrackIds_.size() ? eventId_ : -1;}  ///< see addSimTrackId(int32_t simTrackId)
+    int32_t                      simHitId()                const { return simHitId_;}
 
 
     /// add an id number to the list of id numbers of SimTracks from which the hit originates
@@ -45,10 +49,13 @@ class FastSingleTrackerRecHit : public FastTrackerRecHit {
     /// see Adjuster::doTheOffset(int bunchSpace, int bcr, TrackingRecHitCollection & trackingrechits, unsigned int evtNr, int vertexOffset)
     void setEventId(int32_t eventId)    {eventId_ = eventId;}
 
+    void setSimHitId(int32_t simHitId)  {simHitId_ = simHitId;}
+    
     private:
 
     int32_t id_;                                             ///< see setId(int32_t id)
     int32_t eventId_;                                        ///< see setEeId(int32_t eeid)
+    int32_t simHitId_;
     std::vector<int32_t> simTrackIds_;                       ///< see addSimTrackIds(int32_t)
     
 };
