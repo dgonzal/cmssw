@@ -17,5 +17,5 @@ bool FastTrackerRecHit::sharesInput( const TrackingRecHit* other,
     if(what==all)
 	return(this->sameId(otherCast,0) && this->sameId(otherCast,1));
     else
-	return this->sameId(otherCast,0) || (this->nIds() > 0 && this->sameId(otherCast,1));
+	return this->sameId(otherCast,0) || (this->nIds() > 1 && this->sameId(otherCast,1));
 }

@@ -32,6 +32,13 @@ class FastProjectedTrackerRecHit : public FastTrackerRecHit {
     size_t                       nSimTrackIds()            const { return originalHit_.nSimTrackIds();}                             ///< see addSimTrackId(int32_t simTrackId)
     int32_t                      simTrackId(size_t i)      const { return originalHit_.simTrackId(i);}                              ///< see addSimTrackId(int32_t simTrackId)
     int32_t                      simTrackEventId(size_t i) const { return originalHit_.simTrackEventId(i);;}                        ///< see addSimTrackId(int32_t simTrackId)
+
+    void setEventId(int32_t eventId){originalHit_.setEventId(eventId);}
+    void setHitCombinationId(int32_t hitCombinationId) {
+	FastTrackerRecHit::setHitCombinationId(hitCombinationId);
+	originalHit_.setHitCombinationId(hitCombinationId);
+    }
+
     
     private:
 
