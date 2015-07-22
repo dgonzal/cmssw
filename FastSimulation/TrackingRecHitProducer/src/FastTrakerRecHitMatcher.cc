@@ -42,18 +42,19 @@ void FastTrackerRecHitMatcher::match(  const FastSingleTrackerRecHitCombination 
 	    
 		// get the track direction from the simhit
 		LocalVector simtrackdir = simHits[rit->simHitId()].localDirection();	    
-
+		
 		const GluedGeomDet* gluedDet = (const GluedGeomDet*)geometry.idToDet(DetId(specDetId.glued()));
 		const StripGeomDetUnit* stripdet =(StripGeomDetUnit*) gluedDet->stereoDet();
-	  
+		
 		// global direction of track
 		GlobalVector globaldir= stripdet->surface().toGlobal(simtrackdir);
 		LocalVector gluedsimtrackdir=gluedDet->surface().toLocal(globaldir);
 
 		// check whether next hit is list is partner
-		FastSingleTrackerRecHitCombination::const_iterator partner = rit;
+		auto partner = rit;
 		partner++;
 		if( partner != recHits.end() && StripSubdetector( partner->geographicalId() ).partnerDetId() == detid.rawId() )	{
+		    
 		    // in case stereo hit comes before mono hit
 		    // (by convention, mono hit is the most inner one)
 		    if(   specDetId.stereo()  ) {
