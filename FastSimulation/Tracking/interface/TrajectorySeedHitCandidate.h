@@ -159,15 +159,17 @@ public:
       if(hit()->dimension()==1 || hit()->isPixel())
 	  recHitCombination.push_back( hit()->clone() );
       
-      if(hit()->isProjected())
+      else if(hit()->isProjected())
 	  recHitCombination.push_back(buildSplitStripHit(static_cast<const FastProjectedTrackerRecHit *>(hit())->originalHit()));
       
-      if(hit()->isMatched()){
+      else if(hit()->isMatched()){
 	  recHitCombination.push_back(buildSplitStripHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->firstHit()));
 	  recHitCombination.push_back(buildSplitStripHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->secondHit()));
       }
       
-      recHitCombination.push_back(static_cast<const FastSingleTrackerRecHit &>(*hit()));
+      else{
+	  recHitCombination.push_back(static_cast<const FastSingleTrackerRecHit &>(*hit()));
+      }
   }
   
   inline FastSingleTrackerRecHit * buildSplitStripHit (const FastSingleTrackerRecHit & hit) const {

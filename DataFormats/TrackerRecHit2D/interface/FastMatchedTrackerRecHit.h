@@ -25,7 +25,7 @@ class FastMatchedTrackerRecHit : public FastTrackerRecHit{
 	, componentMono_(rMono) 
 	, componentStereo_(rStereo)
     {};
-
+    
     virtual FastMatchedTrackerRecHit * clone() const {FastMatchedTrackerRecHit * p =  new FastMatchedTrackerRecHit( * this); p->load(); return p;}
 
 

@@ -108,7 +108,6 @@ void FastTrackingMaskProducer::produce(edm::Event& e, const edm::EventSetup& es)
     }
 
     int ngood = 0;
-    std::cout << "----" << std::endl;
     for (size_t i = 0 ; i!=trackCollection->size();++i)
 	{
       
@@ -147,17 +146,10 @@ void FastTrackingMaskProducer::produce(edm::Event& e, const edm::EventSetup& es)
 	  
 		const FastTrackerRecHit * hit = static_cast<const FastTrackerRecHit*>(*hitIt);
 
-		std::cout<< hit->hitCombinationId() <<  " " << hit->getRTTI() << " ";
-		for(unsigned id_index = 0;id_index < hit->nIds();id_index++){
-		    std::cout << hit->id(id_index);
-		}
-		std::cout << std::endl;
-	  
 		uint32_t hitCombination_id = hit->hitCombinationId();
 		if (hitCombination_id >= hitCombinationMasks->size()) { 
 		    hitCombinationMasks->resize(hitCombination_id+1,false);
 		}
-		std::cout << "hey" <<std::endl;
 		hitCombinationMasks->at(hitCombination_id) = true;
 	  
 		for(unsigned id_index = 0;id_index < hit->nIds();id_index++){
@@ -165,7 +157,6 @@ void FastTrackingMaskProducer::produce(edm::Event& e, const edm::EventSetup& es)
 		    if (hit_id >= hitMasks->size()) { 
 			hitMasks->resize(hit_id+1,false);   
 		    }
-		    std::cout << "how" << std::endl;
 		    hitMasks->at(hit_id) = true;
 		}
 	    }
