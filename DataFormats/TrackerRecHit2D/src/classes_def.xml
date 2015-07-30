@@ -1,16 +1,15 @@
 <lcgdict>
-
   <class name="FastTrackerRecHit" ClassVersion="0">
-    <version ClassVersion="0" checksum="3796940376"/>
+    <version ClassVersion="0" checksum="2919877493"/>
   </class>
   <class name="FastSingleTrackerRecHit" ClassVersion="0">
-    <version ClassVersion="0" checksum="1779285568"/>
+    <version ClassVersion="0" checksum="2776325933"/>
   </class>
   <class name="FastMatchedTrackerRecHit" ClassVersion="0">
-   <version ClassVersion="0" checksum="4152166897"/>
+   <version ClassVersion="0" checksum="1167342288"/>
   </class>
   <class name="FastProjectedTrackerRecHit" ClassVersion="0">
-   <version ClassVersion="0" checksum="2942134226"/>
+   <version ClassVersion="0" checksum="3192998753"/>
   </class>
 
 

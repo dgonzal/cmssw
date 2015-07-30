@@ -24,7 +24,7 @@ class FastProjectedTrackerRecHit : public FastTrackerRecHit {
 	, originalHit_(originalHit)
     {}
     
-    const FastTrackerRecHit & originalHit() const {return originalHit_;}
+    const FastSingleTrackerRecHit & originalHit() const {return originalHit_;}
     virtual FastProjectedTrackerRecHit * clone() const {FastProjectedTrackerRecHit * p =  new FastProjectedTrackerRecHit( * this); p->load(); return p;}
     size_t                       nIds()                    const { return 1;}
     int32_t                      id(size_t i = 0)          const { return originalHit().id(i);}
