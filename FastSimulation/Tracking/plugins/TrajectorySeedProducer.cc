@@ -407,7 +407,7 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
 	  continue;
 	}
 	
-	FastTMRecHitCombination recHitCombination = recHitCombinations->at(icomb);
+	FastTrackerRecHitCombination recHitCombination = recHitCombinations->at(icomb);
 
 	uint32_t simTrackId = recHitCombination.back().simTrackId(0);
 	const SimTrack& theSimTrack = (*theSimTracks)[simTrackId];
