@@ -601,12 +601,13 @@ void SiTrackerGaussianSmearingRecHitConverter::produce(edm::Event& e, const edm:
   std::map<unsigned, FastSingleTrackerRecHitCombination > temporaryRecHits;
   smearHits( allTrackerHits, temporaryRecHits, tTopo, &random);
   int32_t hitId = 0;
-  for(auto entry : temporaryRecHits){
-      for(auto hit : entry.second){
+  for(auto & entry : temporaryRecHits){
+      for(auto & hit : entry.second){
 	  hit.setId(hitId++);
       }
   }
   
+
  // Step C: match rechits on stereo layers
   std::map<unsigned, FastTrackerRecHitCombination > temporaryMatchedRecHits ;
   if(doMatching)  matchHits(  temporaryRecHits, allTrackerHits,  temporaryMatchedRecHits);
@@ -617,7 +618,14 @@ void SiTrackerGaussianSmearingRecHitConverter::produce(edm::Event& e, const edm:
   if(doMatching){
     loadMatchedRecHits(temporaryMatchedRecHits, *recHitCombinations);
   }
-
+  std::cout << "#####" << std::endl;
+  for(auto & combination : *recHitCombinations)
+      for(auto & hit : combination){
+	  for(unsigned i = 0;i<hit.nIds();i++)
+	      std::cout << hit.id(i) << " ";
+	  std::cout << hit.hitCombinationId();
+	  std::cout << std::endl;
+      }
   e.put(recHitCombinations);
 }
 

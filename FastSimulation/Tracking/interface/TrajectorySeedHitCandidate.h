@@ -160,21 +160,20 @@ public:
 	  recHitCombination.push_back( hit()->clone() );
       
       if(hit()->isProjected())
-	  recHitCombination.push_back(buildSplitHit(static_cast<const FastProjectedTrackerRecHit *>(hit())->originalHit()));
+	  recHitCombination.push_back(buildSplitStripHit(static_cast<const FastProjectedTrackerRecHit *>(hit())->originalHit()));
       
       if(hit()->isMatched()){
-	  recHitCombination.push_back(buildSplitHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->firstHit()));
-	  recHitCombination.push_back(buildSplitHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->secondHit()));
+	  recHitCombination.push_back(buildSplitStripHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->firstHit()));
+	  recHitCombination.push_back(buildSplitStripHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->secondHit()));
       }
       
-      recHitCombination.push_back(buildSplitHit(*hit()));
+      recHitCombination.push_back(static_cast<const FastSingleTrackerRecHit &>(*hit()));
   }
   
-  inline FastSingleTrackerRecHit * buildSplitHit (const FastTrackerRecHit & hit) const {
-      return new FastSingleTrackerRecHit(hit.localPositionFast(),
-					 hit.localPositionErrorFast(),
-					 *hit.det(),
-					 hit.detUnit()->type().isEndcap() ? fastTrackerRecHitType::siStrip2D : fastTrackerRecHitType::siStrip1D);
+  inline FastSingleTrackerRecHit * buildSplitStripHit (const FastSingleTrackerRecHit & hit) const {
+      FastSingleTrackerRecHit * newHit = hit.clone();
+      newHit->set2D(newHit->detUnit()->type().isEndcap());
+      return newHit;
   }
   
 

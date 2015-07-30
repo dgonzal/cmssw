@@ -43,10 +43,10 @@ class FastMatchedTrackerRecHit : public FastTrackerRecHit{
     int32_t   simTrackId(size_t i)      const { return i < componentMono_.nSimTrackIds() ? componentMono_.simTrackId(i) : componentStereo_.simTrackId(i-componentMono_.nSimTrackIds()); }
     int32_t   simTrackEventId(size_t i) const { return i < componentMono_.nSimTrackIds() ? componentMono_.simTrackEventId(i) : componentStereo_.simTrackEventId(i-componentMono_.nSimTrackIds()); }
     
-    const FastTrackerRecHit &   monoHit()                const { return componentMono_;}
-    const FastTrackerRecHit &   stereoHit()              const { return componentStereo_;}
-    const FastTrackerRecHit &   firstHit()               const { return stereoHitFirst_ ? componentStereo_ : componentMono_;}
-    const FastTrackerRecHit &   secondHit()              const { return stereoHitFirst_ ? componentMono_ : componentStereo_;}
+    const FastSingleTrackerRecHit &   monoHit()                const { return componentMono_;}
+    const FastSingleTrackerRecHit &   stereoHit()              const { return componentStereo_;}
+    const FastSingleTrackerRecHit &   firstHit()               const { return stereoHitFirst_ ? componentStereo_ : componentMono_;}
+    const FastSingleTrackerRecHit &   secondHit()              const { return stereoHitFirst_ ? componentMono_ : componentStereo_;}
     
 
     void setStereoLayerFirst(bool stereoHitFirst = true){stereoHitFirst_ = stereoHitFirst;}

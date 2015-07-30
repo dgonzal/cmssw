@@ -94,6 +94,8 @@ class FastTrackerRecHit : public BaseTrackerRecHit
 
     virtual void setEventId(int32_t eventId) {};
 
+    void set2D(bool is2D=true){is2D_ = is2D;}
+
     /// bogus function : 
     /// implement purely virtual function of TrackingRecHit
     virtual std::vector<const TrackingRecHit*> recHits() const { return std::vector<TrackingRecHit const*>();}
@@ -121,7 +123,7 @@ class FastTrackerRecHit : public BaseTrackerRecHit
 
     int32_t hitCombinationId_;           ///< see setHitCombinationId(int32_t hitCombinationId)
     const bool isPixel_;                 ///< hit is either on pixel modul (isPixel_ = true) or strip module (isPixel_ = false)
-    const bool is2D_;                    ///< hit is either one dimensional (is2D_ = false) or two dimensions (is2D_ = true)
+    bool is2D_;                          ///< hit is either one dimensional (is2D_ = false) or two dimensions (is2D_ = true)
 
     LocalPoint m_myPos;                  ///< helps making the hit postion and error persistent
     LocalError m_myErr;                  ///< helps making the hit postion and error persistent
