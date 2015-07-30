@@ -22,11 +22,8 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "DataFormats/Common/interface/Handle.h"
 #include "DataFormats/Common/interface/OwnVector.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2DCollection.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2DCollection.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSRecHit2D.h"
-#include "DataFormats/TrackerRecHit2D/interface/SiTrackerGSMatchedRecHit2D.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHit.h"
 #include "FastSimulation/Tracking/plugins/FastTrackingMaskProducer.h"
 #include <vector>
 #include <stdio.h>
@@ -143,23 +140,22 @@ FastTrackingMaskProducer::produce(edm::Event& e, const edm::EventSetup& es)
       for (auto hitIt = track.recHitsBegin() ;  hitIt != track.recHitsEnd(); ++hitIt) {
 
 	if(!(*hitIt)->isValid())
-	  continue;
+	    continue;
 
-	const GSSiTrackerRecHit2DLocalPos * hit = dynamic_cast<const GSSiTrackerRecHit2DLocalPos*>(*hitIt);
-	if(hit){
-	  uint32_t hitCombination_id = hit->hitCombinationId();
-	  if (hitCombination_id >= hitCombinationMasks->size()) { 
+	if(!(trackerHitRTTI::isFast(**hitIt)))
+	    continue;
+
+	const FastTrackerRecHit * hit = static_cast<const FastTrackerRecHit*>(*hitIt);
+
+	uint32_t hitCombination_id = hit->hitCombinationId();
+	if (hitCombination_id >= hitCombinationMasks->size()) { 
 	    hitCombinationMasks->resize(hitCombination_id+1,false);
-	  }
-	  hitCombinationMasks->at(hitCombination_id) = true;
+	}
+	hitCombinationMasks->at(hitCombination_id) = true;
 	  
-	  /* TODO implement hit id properly
-	  uint32_t hit_id = hit->id();	
-	  if (hit_id >= hitMasks->size()) { 
+	uint32_t hit_id = hit->id();	
+	if (hit_id >= hitMasks->size()) { 
 	    hitMasks->resize(hit_id+1,false);   
-	  }
-	  hitMasks->at(hit_id) = true;
-	  */
 	}
 	
 	else{

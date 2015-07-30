@@ -54,23 +54,24 @@ void FastTrackerRecHitMatcher::match(  const FastSingleTrackerRecHitCombination 
 		auto partner = rit;
 		partner++;
 		if( partner != recHits.end() && StripSubdetector( partner->geographicalId() ).partnerDetId() == detid.rawId() )	{
-		    
+		    FastMatchedTrackerRecHit * theMatchedHit;
 		    // in case stereo hit comes before mono hit
 		    // (by convention, mono hit is the most inner one)
 		    if(   specDetId.stereo()  ) {
-			FastMatchedTrackerRecHit theMatchedHit = match( &(*partner),  &(*rit),  gluedDet  , gluedsimtrackdir );
-			theMatchedHit.setStereoLayerFirst();
+			theMatchedHit = match( &(*partner),  &(*rit),  gluedDet  , gluedsimtrackdir );
+			theMatchedHit->setStereoLayerFirst();
 		    }
 		    // in case mono hit comes before stereo hit
 		    else{
-			FastMatchedTrackerRecHit theMatchedHit = match( &(*rit),  &(*partner),  gluedDet  , gluedsimtrackdir );
+			theMatchedHit = match( &(*rit),  &(*partner),  gluedDet  , gluedsimtrackdir );
 		    }
+		    matchedRecHits.push_back( theMatchedHit );
 		    // skip the partner in the loop over recHits
 		    ++rit,recHitIndex++;
 		}
 		else{
 		    // in case no partner is found, project
-		    FastProjectedTrackerRecHit theProjectedHit = projectOnly( &(*rit), geometry.idToDet(detid),gluedDet, gluedsimtrackdir  );
+		    FastProjectedTrackerRecHit * theProjectedHit = projectOnly( &(*rit), geometry.idToDet(detid),gluedDet, gluedsimtrackdir  );
 		    matchedRecHits.push_back( theProjectedHit );
 		}
 	    }
@@ -83,7 +84,7 @@ void FastTrackerRecHitMatcher::match(  const FastSingleTrackerRecHitCombination 
 
 
 
-FastMatchedTrackerRecHit FastTrackerRecHitMatcher::match(const FastSingleTrackerRecHit *monoRH,
+FastMatchedTrackerRecHit * FastTrackerRecHitMatcher::match(const FastSingleTrackerRecHit *monoRH,
 							 const FastSingleTrackerRecHit *stereoRH,
 							 const GluedGeomDet* gluedDet,
 							 LocalVector& trackdirection) const
@@ -172,7 +173,7 @@ FastMatchedTrackerRecHit FastTrackerRecHitMatcher::match(const FastSingleTracker
     DetId det(monoRH->geographicalId());
     if(det.subdetId() > 2) {
     
-	FastMatchedTrackerRecHit rV(position, error, *gluedDet, *monoRH, *stereoRH);
+	FastMatchedTrackerRecHit * rV = new FastMatchedTrackerRecHit(position, error, *gluedDet, *monoRH, *stereoRH);
 	return rV;
     }
   
@@ -208,7 +209,7 @@ FastTrackerRecHitMatcher::StripPosition
 
 
 
-FastProjectedTrackerRecHit FastTrackerRecHitMatcher::projectOnly( const FastSingleTrackerRecHit *originalRH,
+FastProjectedTrackerRecHit * FastTrackerRecHitMatcher::projectOnly( const FastSingleTrackerRecHit *originalRH,
 								  const GeomDet * monoDet,
 								  const GluedGeomDet* gluedDet,
 								  LocalVector& ldir) const
@@ -242,7 +243,7 @@ FastProjectedTrackerRecHit FastTrackerRecHitMatcher::projectOnly( const FastSing
     //Added by DAO to make sure y positions are zero and correct Mono or stereo Det is filled.
   
     if ((isMono && isStereo)||(!isMono&&!isStereo)) throw cms::Exception("FastTrackerRecHitMatcher") << "Something wrong with DetIds.";
-    FastProjectedTrackerRecHit rV(projectedHitPos, rotatedError, *gluedDet, *originalRH);
+    FastProjectedTrackerRecHit * rV = new FastProjectedTrackerRecHit(projectedHitPos, rotatedError, *gluedDet, *originalRH);
     return rV;
 }
 

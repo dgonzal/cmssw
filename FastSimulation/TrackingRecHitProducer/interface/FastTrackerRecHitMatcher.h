@@ -30,21 +30,21 @@ class FastTrackerRecHitMatcher {
 	       
     typedef std::pair<LocalPoint,LocalPoint>                   StripPosition; 
 
-    FastMatchedTrackerRecHit match( const FastSingleTrackerRecHit *monoRH,
-				    const FastSingleTrackerRecHit *stereoRH,
-				    const GluedGeomDet* gluedDet,
-				    LocalVector& trackdirection) const;
-  
-  
+    FastMatchedTrackerRecHit * match( const FastSingleTrackerRecHit *monoRH,
+				      const FastSingleTrackerRecHit *stereoRH,
+				      const GluedGeomDet* gluedDet,
+				      LocalVector& trackdirection) const;
+    
+    
     StripPosition project(const GeomDetUnit *det,
 			  const GluedGeomDet* glueddet,
 			  const StripPosition& strip,
 			  const LocalVector& trackdirection) const;
   
-    FastProjectedTrackerRecHit projectOnly( const FastSingleTrackerRecHit *monoRH,
-					  const GeomDet * monoDet,
-					  const GluedGeomDet* gluedDet,
-					  LocalVector& ldir) const;
+    FastProjectedTrackerRecHit * projectOnly( const FastSingleTrackerRecHit *monoRH,
+					      const GeomDet * monoDet,
+					      const GluedGeomDet* gluedDet,
+					      LocalVector& ldir) const;
   
 };
 
