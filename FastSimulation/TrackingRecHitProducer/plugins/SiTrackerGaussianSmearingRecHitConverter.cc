@@ -618,14 +618,6 @@ void SiTrackerGaussianSmearingRecHitConverter::produce(edm::Event& e, const edm:
   if(doMatching){
     loadMatchedRecHits(temporaryMatchedRecHits, *recHitCombinations);
   }
-  std::cout << "#####" << std::endl;
-  for(auto & combination : *recHitCombinations)
-      for(auto & hit : combination){
-	  for(unsigned i = 0;i<hit.nIds();i++)
-	      std::cout << hit.id(i) << " ";
-	  std::cout << hit.hitCombinationId();
-	  std::cout << std::endl;
-      }
   e.put(recHitCombinations);
 }
 
