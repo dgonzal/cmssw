@@ -42,7 +42,6 @@ class FastTrackerRecHit : public BaseTrackerRecHit
     /// 
     FastTrackerRecHit()
 	: BaseTrackerRecHit()
-	, hitCombinationId_(-1)
 	, isPixel_(false)
 	, is2D_(true)
 	{}
@@ -56,7 +55,6 @@ class FastTrackerRecHit : public BaseTrackerRecHit
     /// the detector id, and type information (rt)
     FastTrackerRecHit( const LocalPoint& p, const LocalError&e, GeomDet const & idet,fastTrackerRecHitType::HitType hitType) 
 	: BaseTrackerRecHit(p,e,idet,fastTrackerRecHitType::rtti(hitType)) 
-	, hitCombinationId_(-1)
 	, isPixel_(fastTrackerRecHitType::isPixel(hitType))
 	, is2D_(fastTrackerRecHitType::is2D(hitType))
 	{store();}
@@ -81,17 +79,13 @@ class FastTrackerRecHit : public BaseTrackerRecHit
     virtual int32_t              id(size_t i = 0)              const { return -1;}
     virtual int32_t              eventId(size_t i = 0)         const { return -1;}
     
-    int32_t                      hitCombinationId()            const { return hitCombinationId_;}    ///< see setHitCombinationId(int32_t hitCombinationId)
     virtual size_t               nSimTrackIds()                const { return 0;}                    ///< see FastSingleTrackerRecHit::addSimTrackId(int32_t simTrackId)
     virtual int32_t              simTrackId(size_t i)          const { return -1;}                   ///< see FastSingleTrackerRecHit::addSimTrackId(int32_t simTrackId)
     virtual int32_t              simTrackEventId(size_t i)     const { return -1;}                   ///< see FastSingleTrackerRecHit::addSimTrackId(int32_t simTrackId)
+
     bool isPixel() const GCC11_OVERRIDE {return isPixel_;} ///< pixel or strip?
 
     /* setters */
-
-    /// set the id number for the hit combination to which the hit belongs
-    /// the hit combination id number is the index of the combination in the FastTrackerRecHitCombinations list
-    virtual void setHitCombinationId(int32_t hitCombinationId) {hitCombinationId_ = hitCombinationId;}
 
     virtual void setEventId(int32_t eventId) {};
 
@@ -122,7 +116,6 @@ class FastTrackerRecHit : public BaseTrackerRecHit
 
     protected:
 
-    int32_t hitCombinationId_;           ///< see setHitCombinationId(int32_t hitCombinationId)
     const bool isPixel_;                 ///< hit is either on pixel modul (isPixel_ = true) or strip module (isPixel_ = false)
     bool is2D_;                          ///< hit is either one dimensional (is2D_ = false) or two dimensions (is2D_ = true)
 

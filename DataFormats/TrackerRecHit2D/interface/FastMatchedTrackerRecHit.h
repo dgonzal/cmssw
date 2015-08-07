@@ -28,13 +28,6 @@ class FastMatchedTrackerRecHit : public FastTrackerRecHit{
     
     virtual FastMatchedTrackerRecHit * clone() const {FastMatchedTrackerRecHit * p =  new FastMatchedTrackerRecHit( * this); p->load(); return p;}
 
-
-    void setHitCombinationId(int32_t hitCombinationId) {
-	FastTrackerRecHit::setHitCombinationId(hitCombinationId);
-	componentMono_.setHitCombinationId(hitCombinationId);
-	componentStereo_.setHitCombinationId(hitCombinationId);
-    }
-
     size_t    nIds()                    const { return 2;}
     int32_t   id(size_t i = 0)          const { return i==0 ? monoHit().id() : stereoHit().id(); }
     int32_t   eventId(size_t i = 0)     const { return i==0 ? monoHit().eventId() : stereoHit().eventId(); }
