@@ -110,7 +110,7 @@ void FastsimHitNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es
   //const TrackerTopology* const tTopo = tTopoHandle.product();
 
 
-  edm::Handle<FastTrackerRecHitCombinations> recHitCombinations;
+  edm::Handle<FastTrackerRecHitCombinationCollection> recHitCombinations;
   //std::string hitProducer = conf_.getParameter<std::string>("HitProducer");
   //e.getByLabel(hitProducer, theGSRecHits);
   //e.getByLabel("siTrackerGaussianSmearingRecHits", "TrackerGSRecHits", theGSRecHits);
@@ -129,7 +129,7 @@ void FastsimHitNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es
   for ( size_t c_index = 0;c_index < recHitCombinations->size();c_index++){
       for( size_t h_index = 0;h_index < recHitCombinations->at(h_index).size();h_index++){
 
-       const auto & recHit = recHitCombinations->at(c_index)[h_index];
+       const auto & recHit = *(*recHitCombinations)[c_index][h_index].get();
        const DetId& detId =  recHit.geographicalId();
        const GeomDet* geomDet( theGeometry->idToDet(detId) );
        /*

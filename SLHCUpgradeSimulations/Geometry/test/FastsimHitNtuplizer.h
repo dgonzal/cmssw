@@ -6,7 +6,7 @@
  *
  ************************************************************/
 
-#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCombination.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCollection.h"
 #include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHit.h"
 
 #include "FWCore/Framework/interface/EDAnalyzer.h"
