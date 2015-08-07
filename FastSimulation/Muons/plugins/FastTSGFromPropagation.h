@@ -29,7 +29,7 @@
 #include "RecoTracker/TransientTrackingRecHit/interface/TkTransientTrackingRecHitBuilder.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 
-#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCombination.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCollection.h"
 #include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHit.h"
 
 #include <memory>
@@ -173,13 +173,13 @@ private:
 
   const edm::ParameterSet theConfig;
   edm::EDGetTokenT<edm::SimTrackContainer> theSimTrackCollectionToken_;
-  edm::EDGetTokenT<FastTrackerRecHitCombinations>  recHitCombinationsToken_;
+  edm::EDGetTokenT<FastTrackerRecHitCombinationCollection>  recHitCombinationsToken_;
   edm::EDGetTokenT<reco::BeamSpot> beamSpot_;
   edm::EDGetTokenT<MeasurementTrackerEvent> theMeasurementTrackerEventToken_;
 
   edm::Handle<reco::BeamSpot> theBeamSpot;
   edm::Handle<edm::SimTrackContainer> theSimTracks;
-  edm::Handle<FastTrackerRecHitCombinations> recHitCombinations;
+  edm::Handle<FastTrackerRecHitCombinationCollection> recHitCombinations;
   edm::Handle<MeasurementTrackerEvent> theMeasTrackerEvent;
   edm::ESHandle<TransientTrackingRecHitBuilder> theTTRHBuilder;
 
