@@ -19,7 +19,7 @@
 
 // Data Formats
 #include "SimDataFormats/CrossingFrame/interface/MixCollection.h"
-#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCombination.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCollection.h"
 #include "DataFormats/GeometryVector/interface/Point3DBase.h"
 #include "DataFormats/GeometrySurface/interface/LocalError.h"
 
@@ -60,27 +60,14 @@ class SiTrackerGaussianSmearingRecHitConverter : public edm::stream::EDProducer 
   // Begin Run
   virtual void beginRun(edm::Run const& run, const edm::EventSetup & es) override;
   
-  void smearHits(const edm::PSimHitContainer& input,
-                 std::map<unsigned, FastSingleTrackerRecHitCombination >& theRecHits,
-		 const TrackerTopology *tTopo,
-                 RandomEngineAndDistribution const*);
-
- void  matchHits( const std::map<unsigned, FastSingleTrackerRecHitCombination>& theRecHits, 
-		  const edm::PSimHitContainer & simHits,
-		  std::map<unsigned, FastTrackerRecHitCombination>& matchedMap);//,
-
-  void loadMatchedRecHits(std::map<unsigned,FastTrackerRecHitCombination>& theRecHits, 
-			  FastTrackerRecHitCombinations & recHitCombinations) const;
 
   private:
   //
-  bool gaussianSmearing(const PSimHit& simHit, 
-			Local3DPoint& position , 
-			LocalError& error, 
-			unsigned& alphaMult, 
-			unsigned& betaMult,
-			const TrackerTopology *tTopo,
-                        RandomEngineAndDistribution const*);
+  bool smear(const PSimHit& simHit, 
+	     Local3DPoint& position , 
+	     LocalError& error, 
+	     const TrackerTopology *tTopo,
+	     RandomEngineAndDistribution const*);
   //
   void loadPixelData();
   //
@@ -96,7 +83,6 @@ class SiTrackerGaussianSmearingRecHitConverter : public edm::stream::EDProducer 
   double deltaRaysPCut; // GeV/c
   bool trackingPSimHits; // in case it is true make RecHit = replica of PSimHit without errors (1 um)
   //
-  bool doMatching;
   bool doDisableChannels;
   
 
