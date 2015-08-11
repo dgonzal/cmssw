@@ -1,0 +1,15 @@
+<lcgdict>
+
+  <class name="FastTrackerRecHitCombinationInfo" ClassVersion="10">
+    <version ClassVersion="10" checksum="2213049160"/>
+  </class>
+  <class name="std::vector<FastTrackerRecHitCombinationInfo>"/>
+  <class name="edm::Wrapper<std::vector<FastTrackerRecHitCombinationInfo> >"/>
+
+  <class name="FastTrajectorySeedInfo" ClassVersion="10">
+    <version ClassVersion="10" checksum="4121206183"/>
+  </class>
+  <class name="std::vector<FastTrajectorySeedInfo>"/>
+  <class name="edm::Wrapper<std::vector<FastTrajectorySeedInfo> >"/>
+  
+</lcgdict>

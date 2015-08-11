@@ -1,0 +1,1 @@
+#include "FastSimDataFormats/FastTrackingInfo/interface/FastTrackerRecHitCombinationInfo.h"

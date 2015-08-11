@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
-trajectorySeedProducer = cms.EDProducer("TrajectorySeedProducer",
+trajectorySeedProducer = cms.EDProducer(
+    "TrajectorySeedProducer",
                                         
     simTrackSelection = cms.PSet(
          # The smallest pT (in GeV) to create a track candidate 
@@ -25,9 +26,7 @@ trajectorySeedProducer = cms.EDProducer("TrajectorySeedProducer",
     ptMin = cms.double(-1),
 
     # Inputs: tracker rechits, beam spot position.
-    recHits = cms.InputTag("siTrackerGaussianSmearingRecHits"),
-    #hitMasks = cms.InputTag("hitMasks"),
-    #hitCombinationMasks = cms.InputTag("hitCombinationMasks"),
+    src = cms.InputTag("fastMatchedTrackerRecHitCombinations"),
         
     layerList = cms.vstring(),
 )
