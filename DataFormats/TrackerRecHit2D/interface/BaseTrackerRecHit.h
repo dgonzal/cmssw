@@ -15,7 +15,8 @@ class OmniClusterRef;
 
 namespace trackerHitRTTI {
   // tracking hit can be : single (si1D, si2D, pix), projected, matched or multi
-  enum RTTI { undef=0, single=1, projStereo=2, projMono=3, match=4, multi=5, gs=6, gsMatch=7};
+  enum RTTI { undef=0, single=1, projStereo=2, projMono=3, match=4, multi=5, gs=6, gsMatch=7,
+	      fastSingle=6, fastProjStereo=7,fastProjMono=8,fastMatch=9};
   inline RTTI rtti(TrackingRecHit const & hit)  { return RTTI(hit.getRTTI());}
   inline bool isUndef(TrackingRecHit const & hit) { return rtti(hit)==undef;}
   inline bool isSingle(TrackingRecHit const & hit)  { return rtti(hit)==single || rtti(hit)==fastSingle;}
