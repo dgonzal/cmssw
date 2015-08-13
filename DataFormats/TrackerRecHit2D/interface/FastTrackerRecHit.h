@@ -111,8 +111,47 @@ class FastTrackerRecHit : public BaseTrackerRecHit
     // - FastTrackerSingleRecHit::sharesInput 
     // - FastSiStripMatchedRecHit::sharesInput
     // - FastProjectedSiStripRecHit2D::sharesInput
-    bool sameId(const FastTrackerRecHit * other,size_t i=0) const {return id(i) == other->id(i) && eventId(i) == other->eventId(i);}
-    bool sharesInput(const TrackingRecHit * other,SharedInputType what) const;
+    inline bool sameId(const FastTrackerRecHit * other,size_t i=0,size_t j = 0) const {return id(i) == other->id(j) && eventId(i) == other->eventId(j);}
+    inline bool sharesInput(const TrackingRecHit * other,SharedInputType what) const {
+
+	// cast other hit
+	if(!trackerHitRTTI::isFast(*other) )
+	    return false;
+	const FastTrackerRecHit * otherCast = static_cast<const FastTrackerRecHit *>(other);
+	
+	// checks
+	if(this->nIds() == 1){           // this hit is single/projected
+	    if(otherCast->nIds() == 1){  // other hit is single/projected
+		return this->sameId(otherCast,0,0);
+	    }
+	    else {                       // other hit is matched
+		if(what == all){
+		    return false;
+		}
+		else {
+		    return(this->sameId(otherCast,0,0) || this->sameId(otherCast,0,1));
+		}
+	    }
+	}
+	else{                            // this hit is matched
+	    if(otherCast->nIds() == 1){  // other hit is single/projected
+		if (what == all){
+		    return false;
+		}
+		else{
+		    return(this->sameId(otherCast,0,0) || this->sameId(otherCast,1,0));
+		}
+	    }
+	    else{                        // other hit is matched
+		if(what == all){
+		    return(this->sameId(otherCast,0,0) && this->sameId(otherCast,1,1));
+		}
+		else {
+		    return(this->sameId(otherCast,0,0) || this->sameId(otherCast,1,1));
+		}
+	    }
+	}
+    }
 
     protected:
 
