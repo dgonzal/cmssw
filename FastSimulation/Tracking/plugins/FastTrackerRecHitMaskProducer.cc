@@ -16,153 +16,116 @@
 #include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHit.h"
 #include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCollection.h"
 
+// other
+#include "TrackingTools/PatternTools/interface/TrackCollectionTokens.h"
+
+
 class FastTrackerRecHitMaskProducer : public edm::stream::EDProducer <>
 {
     public:
 
-    explicit FastTrackerRecHitMaskProducer(const edm::ParameterSet& conf);
+    explicit FastTrackerRecHitMaskProducer(const edm::ParameterSet&);
 
     virtual ~FastTrackerRecHitMaskProducer() {}
 
-    virtual void produce(edm::Event& e, const edm::EventSetup& es) override;
+    virtual void produce(edm::Event&, const edm::EventSetup&) override;
 
 
     private:
 
-    // tokens
-    edm::EDGetTokenT<reco::TrackCollection>  tracksToken_;
-    edm::EDGetTokenT<FastTrackerRecHitCollection>  recHitsToken_;
-    edm::EDGetTokenT<std::vector<bool> > oldHitMasksToken_;
-    edm::EDGetTokenT<edm::ValueMap<int> > trkQualsToken_;
+    // an alias
+    using QualityMaskCollection = std::vector<unsigned char>;
 
-    // other data members
-    bool oldHitMasks_exists_;
-    bool overRideTrkQuals_;
-    bool filterTracks_;
-    reco::TrackBase::TrackQuality trackQuality_;
+    // tokens
+    const int minNumberOfLayersWithMeasBeforeFiltering_;
+    const reco::TrackBase::TrackQuality trackQuality_;
+
+    const TrackCollectionTokens trajectories_;
+    edm::EDGetTokenT<QualityMaskCollection> srcQuals;
+
+    edm::EDGetTokenT<FastTrackerRecHitCollection>  recHits_;
+
+    edm::EDGetTokenT<std::vector<bool> > oldHitMaskToken_;
 
 };
 
-FastTrackerRecHitMaskProducer::FastTrackerRecHitMaskProducer(const edm::ParameterSet& conf) 
+FastTrackerRecHitMaskProducer::FastTrackerRecHitMaskProducer(const edm::ParameterSet& iConfig) 
+    : minNumberOfLayersWithMeasBeforeFiltering_(iConfig.getParameter<int>("minNumberOfLayersWithMeasBeforeFiltering"))
+    , trackQuality_(reco::TrackBase::qualityByName(iConfig.getParameter<std::string>("TrackQuality")))
+    , trajectories_(iConfig.getParameter<edm::InputTag>("trajectories"),consumesCollector())
+    , recHits_(consumes<FastTrackerRecHitCollection>(iConfig.getParameter<edm::InputTag>("recHits")))
 {
-    // products                                                                                                     
+
     produces<std::vector<bool> >();
 
-    // flags
-    oldHitMasks_exists_ = conf.exists("oldHitMasks");
-    overRideTrkQuals_ = conf.exists("overrideTrkQuals");
-    filterTracks_ = conf.exists("TrackQuality");
-    
-    // consumes                                                                                                                   
-    tracksToken_ = consumes<reco::TrackCollection>(conf.getParameter<edm::InputTag>("trackCollection"));
-    recHitsToken_ = consumes<FastTrackerRecHitCollection>(conf.getParameter<edm::InputTag>("recHits"));
-    if (oldHitMasks_exists_){
-	oldHitMasksToken_ = consumes<std::vector<bool> >(conf.getParameter<edm::InputTag>("oldHitMasks"));
-    }
+    auto const & classifier = iConfig.getParameter<edm::InputTag>("trackClassifier");
+    if ( !classifier.label().empty())
+	srcQuals = consumes<QualityMaskCollection>(classifier);
 
-    // track quality token
-    if(  overRideTrkQuals_ ){
-	edm::InputTag trkQualsTag = conf.getParameter<edm::InputTag>("overrideTrkQuals");
-	if(trkQualsTag == edm::InputTag(""))
-	    overRideTrkQuals_ = false;
-	else
-	    trkQualsToken_ = consumes<edm::ValueMap<int> >(trkQualsTag);
-    }
-
-    // required track quality
-    trackQuality_=reco::TrackBase::undefQuality;
-    if (filterTracks_){
-	std::string trackQualityStr = conf.getParameter<std::string>("TrackQuality");
-	if ( !trackQualityStr.empty() ) {
-	    trackQuality_=reco::TrackBase::qualityByName(trackQualityStr);
-	}
-	else { 
-	    filterTracks_ = false;
-	}
+    auto const &  oldHitRemovalInfo = iConfig.getParameter<edm::InputTag>("oldHitRemovalInfo");
+    if (!oldHitRemovalInfo.label().empty()) {
+	oldHitMaskToken_ = consumes<std::vector<bool> >(oldHitRemovalInfo);
     }
 }
 
-void FastTrackerRecHitMaskProducer::produce(edm::Event& e, const edm::EventSetup& es)
+void FastTrackerRecHitMaskProducer::produce(edm::Event& iEvent, const edm::EventSetup& es)
 {
+    // the product
+
+    std::unique_ptr<std::vector<bool> > collectedHits(new std::vector<bool>());
+
     // input
-    edm::Handle<reco::TrackCollection> tracks;
-    e.getByToken(tracksToken_,tracks);
 
     edm::Handle<FastTrackerRecHitCollection> recHits;
-    e.getByToken(recHitsToken_,recHits);
+    iEvent.getByToken(recHits_,recHits);
 
-    edm::Handle<edm::ValueMap<int> > quals;
-    if ( overRideTrkQuals_ ) {
-	e.getByToken(trkQualsToken_,quals);
+    if(!oldHitMaskToken_.isUninitialized()){
+	edm::Handle<std::vector<bool> > oldHitMasks;
+	iEvent.getByToken(oldHitMaskToken_,oldHitMasks);
+	collectedHits->insert(collectedHits->begin(),oldHitMasks->begin(),oldHitMasks->end());
+    }
+    collectedHits->resize(recHits->size(),false);
+
+    auto const & tracks = trajectories_.tracks(iEvent);
+
+    QualityMaskCollection const * pquals=nullptr;
+    if (!srcQuals.isUninitialized()) {
+	edm::Handle<QualityMaskCollection> hqual;
+	iEvent.getByToken(srcQuals, hqual);
+	pquals = hqual.product();
     }
 
-    edm::Handle<std::vector<bool> > oldHitMasks;
-    if (oldHitMasks_exists_ == true){
-	e.getByToken(oldHitMasksToken_,oldHitMasks);
-    }
-    
-    // the product
-    std::unique_ptr<std::vector<bool> > hitMasks(new std::vector<bool>());
-
-    // use the old hit masks as a starting point
-    if(oldHitMasks_exists_){
-	hitMasks->insert(hitMasks->begin(),oldHitMasks->begin(),oldHitMasks->end());
-    }
-    
-    // increase the size of the hit mask vector to the size of the recHits vector
-    if(recHits->size() > hitMasks->size()){
-	hitMasks->resize(recHits->size(),false);
-    }
-
+    // required quality
+    unsigned char qualMask = ~0;
+    if (trackQuality_!=reco::TrackBase::undefQuality) qualMask = 1<<trackQuality_; 
+  
     // loop over tracks and mask hits of selected tracks
-    for (size_t i = 0 ; i!=tracks->size();++i) {
-
-	// get the track
-	const reco::Track & track = (*tracks)[i];
-
-	// filter if requested
-	if (filterTracks_) {
-	    reco::TrackRef trackRef(tracks,i);
-	    bool goodTk = true;
-	    
-	    if ( overRideTrkQuals_ ) {
-		int qual= (*quals)[trackRef];
-		if ( qual < 0 ){
-		    goodTk=false;
-		}
-		else
-		    goodTk = ( qual & (1<<trackQuality_))>>trackQuality_;
-	    }
-	    else {
-		goodTk=(track.quality(trackQuality_));
-	    }
-	    if ( !goodTk) continue;
-	}
-      
-      
-	// Loop over the recHits
-	// todo: implement the minimum number of measurements criterium
-	// see http://cmslxr.fnal.gov/lxr/source/RecoLocalTracker/SubCollectionProducers/src/TrackClusterRemover.cc#0166
+    for (auto i=0U; i<tracks.size(); ++i){
+	const reco::Track & track = tracks[i];
+	bool goodTk =  (pquals) ? (*pquals)[i] & qualMask : track.quality(trackQuality_);
+	if ( !goodTk) continue;
+	if(track.hitPattern().trackerLayersWithMeasurement() < minNumberOfLayersWithMeasBeforeFiltering_) continue;
 	for (auto hitIt = track.recHitsBegin() ;  hitIt != track.recHitsEnd(); ++hitIt) {
-
 	    if(!(*hitIt)->isValid())
 		continue;
-
-	    // check whether hit is FastSim hit
-	    if(!(trackerHitRTTI::isFast(**hitIt)))
-		continue;
-	    
 	    const FastTrackerRecHit & hit = static_cast<const FastTrackerRecHit &>(*(*hitIt));
-	    
+	    // note: for matched hits nIds() returns 2, otherwise 1
 	    for(unsigned id_index = 0;id_index < hit.nIds();id_index++){
-		(*hitMasks)[unsigned(hit.id(id_index))] = true;
+		(*collectedHits)[unsigned(hit.id(id_index))] = true;
 	    }
 	}
 	
     }
-    
-    e.put(std::move(hitMasks));
 
+    int n = 0;
+    for(auto entry : *collectedHits)
+	if(entry)
+	    n++;
+
+    std::cout << "# masked = " << n << std::endl;
+
+    iEvent.put(std::move(collectedHits));
+    
 }
 
 DEFINE_FWK_MODULE(FastTrackerRecHitMaskProducer);

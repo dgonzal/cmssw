@@ -155,28 +155,6 @@ public:
       aHit.hit()->localPosition().z() != this->hit()->localPosition().z();
   }
 
-  void buildSplitHit(TrackingRecHitCollection & recHitCombination) const {
-      if(hit()->dimension()==1 || hit()->isPixel())
-	  recHitCombination.push_back( hit()->clone() );
-      
-      else if(hit()->isProjected())
-	  recHitCombination.push_back(buildSplitStripHit(static_cast<const FastProjectedTrackerRecHit *>(hit())->originalHit()));
-      
-      else if(hit()->isMatched()){
-	  recHitCombination.push_back(buildSplitStripHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->firstHit()));
-	  recHitCombination.push_back(buildSplitStripHit(static_cast<const FastMatchedTrackerRecHit *>(hit())->secondHit()));
-      }
-      
-      else{
-	  recHitCombination.push_back(static_cast<const FastSingleTrackerRecHit &>(*hit()));
-      }
-  }
-  
-  inline FastSingleTrackerRecHit * buildSplitStripHit (const FastSingleTrackerRecHit & hit) const {
-      FastSingleTrackerRecHit * newHit = hit.clone();
-      newHit->set2D(newHit->detUnit()->type().isEndcap());
-      return newHit;
-  }
   
 
  private:

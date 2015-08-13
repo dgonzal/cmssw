@@ -34,7 +34,8 @@
 //Propagator withMaterial
 #include "TrackingTools/MaterialEffects/interface/PropagatorWithMaterial.h"
 
-TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf)
+TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf) :
+    hitSplitter()
 {  
   // products
   produces<TrackCandidateCollection>();
@@ -89,8 +90,6 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
   
   // output collection
   std::auto_ptr<TrackCandidateCollection> output(new TrackCandidateCollection);    
-
-  std::cout << "# seeds " << fastSeedInfos->size() << std::endl;
 
   // loop over the seeds
   for (const auto & fastSeedInfo : *fastSeedInfos){
@@ -149,7 +148,7 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     edm::OwnVector<TrackingRecHit> trackRecHits;
     for ( unsigned index = 0; index<recHitCandidates.size(); ++index ) {
 	if(splitHits)
-	    recHitCandidates[index].buildSplitHit(trackRecHits);
+	    hitSplitter.split(*recHitCandidates[index].hit(),trackRecHits);
 	else
 	    trackRecHits.push_back(recHitCandidates[index].hit()->clone());
     }
@@ -159,8 +158,6 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
       std::reverse(recHitCandidates.begin(),recHitCandidates.end());
     }
     
-    std::cout << "   # hits " << recHitCandidates.size() << std::endl;
-
     // trajectory state at simvertex
     const auto & simTrack = fastSeedInfo.simTrack;
     int vertexIndex = simTrack->vertIndex();
@@ -187,8 +184,5 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 
   }
   
-  // put track candidates in event
-  std::cout << "# track candidates " << output->size() << std::endl;
-
   e.put(output);
 }

@@ -42,7 +42,6 @@ initialStepClassifier2.vertices = "firstStepPrimaryVerticesBeforeMixing"
 initialStepClassifier3 = RecoTracker.IterativeTracking.InitialStep_cff.initialStepClassifier3.clone()
 initialStepClassifier3.vertices = "firstStepPrimaryVerticesBeforeMixing"
 
-
 initialStep = RecoTracker.IterativeTracking.InitialStep_cff.initialStep.clone()
 
 # Final sequence

@@ -361,6 +361,10 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
       edm::Handle<std::vector<bool> > hitMasks;
       e.getByToken(hitMasksToken,hitMasks);
       hitMaskHelper.reset(new HitMaskHelper(hitMasks.product()));
+      unsigned nmasked = 0;
+      for(auto entry : *hitMasks)
+	  if(entry) nmasked++;
+      //std::cout << "# masked: " << nmasked << std::endl;
   }
 
 
@@ -390,6 +394,8 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
     auto outputRefProd = e.getRefBeforePut<TrajectorySeedCollection>();
     std::unique_ptr<FastTrajectorySeedInfoCollection> output_info(new FastTrajectorySeedInfoCollection());
     
+    //std::cout << "# combinations : " << recHitCombinationInfos->size() << std::endl;
+
     for ( auto const & recHitCombinationInfo : *recHitCombinationInfos)
 	{
 	  const auto & recHitCombination = recHitCombinationInfo.recHitCombination;
@@ -441,6 +447,8 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
 	    }
 	}
       
+      //std::cout << "#hits" << trackerRecHits.size() << std::endl;
+
       if ( layersCrossed < minLayersCrossed)
         {
 	  continue;

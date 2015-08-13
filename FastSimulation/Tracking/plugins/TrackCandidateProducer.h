@@ -13,8 +13,9 @@
 #include "TrackingTools/PatternTools/interface/Trajectory.h"
 #include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
 
-#include "FastSimulation/Tracking/interface/TrajectorySeedHitCandidate.h"
+#include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
 #include "FastSimDataFormats/FastTrackingInfo/interface/FastTrajectorySeedInfo.h"
+#include "FastSimulation/Tracking/interface/FastTrackerRecHitSplitter.h"
 
 class TrackCandidateProducer : public edm::stream::EDProducer <>
 {
@@ -34,6 +35,8 @@ class TrackCandidateProducer : public edm::stream::EDProducer <>
   bool rejectOverlaps;
   bool splitHits;
   bool hitMasks_exists;
+
+  FastTrackerRecHitSplitter hitSplitter;
  
   // tokens & labels
   edm::EDGetTokenT<FastTrajectorySeedInfoCollection> fastSeedInfosToken;

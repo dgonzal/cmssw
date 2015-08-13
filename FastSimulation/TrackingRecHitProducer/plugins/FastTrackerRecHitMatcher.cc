@@ -56,7 +56,8 @@ class FastTrackerRecHitMatcher : public edm::stream::EDProducer<>  {
     std::auto_ptr<FastTrackerRecHit> match( const FastSingleTrackerRecHit *monoRH,
 					    const FastSingleTrackerRecHit *stereoRH,
 					    const GluedGeomDet* gluedDet,
-					    LocalVector& trackdirection) const;
+					    LocalVector& trackdirection,
+					    bool stereLayerFirst) const;
     
     StripPosition project(const GeomDetUnit *det,
 			  const GluedGeomDet* glueddet,
@@ -65,7 +66,7 @@ class FastTrackerRecHitMatcher : public edm::stream::EDProducer<>  {
     
     inline const FastSingleTrackerRecHit * _cast2Single(const FastTrackerRecHit * recHit) const{
 	if(!recHit->isSingle()){
-	    edm::LogError("FastTrackerRecHitMatcher") << "all rechits in simHit2RecHitMap must be instances of FastSingleTrackerRecHit" << std::endl;
+	    edm::LogError("FastTrackerRecHitMatcher") << "all rechits in simHit2RecHitMap must be instances of FastSingleTrackerRecHit. recHit's rtti: " << recHit->rtti() << std::endl;
 	    exit(1);
 	}
 	return dynamic_cast<const FastSingleTrackerRecHit *>(recHit);
@@ -181,7 +182,8 @@ void FastTrackerRecHitMatcher::produce(edm::Event& iEvent, const edm::EventSetup
 		if( partnerRecHit ){
 		    newRecHit = match( stripSubDetId.stereo() ? partnerRecHit : recHit,
 				       stripSubDetId.stereo() ? recHit : partnerRecHit,
-				       gluedDet  , gluedLocalSimTrackDir );
+				       gluedDet  , gluedLocalSimTrackDir,
+				       stripSubDetId.stereo());
 		}
 		// else: create projected hit
 		else{
@@ -201,7 +203,8 @@ void FastTrackerRecHitMatcher::produce(edm::Event& iEvent, const edm::EventSetup
 std::auto_ptr<FastTrackerRecHit> FastTrackerRecHitMatcher::match(const FastSingleTrackerRecHit *monoRH,
 								 const FastSingleTrackerRecHit *stereoRH,
 								 const GluedGeomDet* gluedDet,
-								 LocalVector& trackdirection) const
+								 LocalVector& trackdirection,
+								 bool stereoHitFirst) const
 {
 
     // stripdet = mono
@@ -285,7 +288,8 @@ std::auto_ptr<FastTrackerRecHit> FastTrackerRecHitMatcher::match(const FastSingl
     //Added by DAO to make sure y positions are zero.
     DetId det(monoRH->geographicalId());
     if(det.subdetId() > 2) {
-	return std::auto_ptr<FastTrackerRecHit>(new FastMatchedTrackerRecHit(position, error, *gluedDet, *monoRH, *stereoRH));
+	return std::auto_ptr<FastTrackerRecHit>(new FastMatchedTrackerRecHit(position, error, *gluedDet, *monoRH, *stereoRH,stereoHitFirst));
+	
     }
   
     else {

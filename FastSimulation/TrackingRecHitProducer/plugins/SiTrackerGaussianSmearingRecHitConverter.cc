@@ -645,12 +645,12 @@ void SiTrackerGaussianSmearingRecHitConverter::produce(edm::Event& e, const edm:
 				
 
       // update map simHit->recHit
-      (*output_recHitRefs)[simHitCounter] = FastTrackerRecHitRef(output_recHits_refProd,simHitCounter);
-      
+      (*output_recHitRefs)[simHitCounter] = FastTrackerRecHitRef(output_recHits_refProd,output_recHits->size()-1);
     } // end if(isCreated)
 
   } // end loop on PSimHits
-  
+
+
   // put products in event
   e.put(std::move(output_recHits));
   e.put(std::move(output_recHitRefs),"simHit2RecHitMap");
