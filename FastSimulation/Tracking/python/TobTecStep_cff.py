@@ -2,16 +2,10 @@ import FWCore.ParameterSet.Config as cms
 
 # import the full tracking equivalent of this file
 import RecoTracker.IterativeTracking.TobTecStep_cff
-                                                                                                                                                                                                                                                              
-# fast tracking mask producer 
-from FastSimulation.Tracking.FastTrackingMaskProducer_cfi import fastTrackingMaskProducer as _fastTrackingMaskProducer                                                   
-tobTecStepMasks = _fastTrackingMaskProducer.clone(                                                                                                                                                                                                 
-    trackCollection = cms.InputTag("pixelLessStepTracks"),
-    TrackQuality = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepClusters.TrackQuality,
-    overrideTrkQuals = cms.InputTag('pixelLessStep',"QualityMasks"),  
-    oldHitCombinationMasks = cms.InputTag("pixelLessStepMasks","hitCombinationMasks"),
-    oldHitMasks = cms.InputTag("pixelLessStepMasks","hitMasks")
-)
+
+# fast tracking mask producer
+import FastSimulation.Tracking.FastTrackerRecHitMaskProducer_cfi
+tobTecStepMasks = FastSimulation.Tracking.FastTrackerRecHitMaskProducer_cfi.maskProducerFromClusterRemover(RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepClusters)
 
 # trajectory seeds 
 #triplet seeds
@@ -23,8 +17,7 @@ tobTecStepSeedsTripl = FastSimulation.Tracking.TrajectorySeedProducer_cfi.trajec
         maxZ0 = -1
     ),
     minLayersCrossed = 4,
-    #hitMasks = cms.InputTag("tobTecStepMasks","hitMasks"),
-    hitCombinationMasks = cms.InputTag("tobTecStepMasks","hitCombinationMasks"),
+    hitMasks = cms.InputTag("tobTecStepMasks"),
     ptMin = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepSeedsTripl.RegionFactoryPSet.RegionPSet.ptMin,
     originHalfLength = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepSeedsTripl.RegionFactoryPSet.RegionPSet.originHalfLength,
     originRadius = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepSeedsTripl.RegionFactoryPSet.RegionPSet.originRadius,
@@ -39,13 +32,13 @@ tobTecStepSeedsPair = FastSimulation.Tracking.TrajectorySeedProducer_cfi.traject
         maxZ0 = 99
     ),
     minLayersCrossed = 4,
-    #hitMasks = cms.InputTag("tobTecStepMasks","hitMasks"),
-    hitCombinationMasks = cms.InputTag("tobTecStepMasks","hitCombinationMasks"),
+    hitMasks = cms.InputTag("tobTecStepMasks"),
     ptMin = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepSeedsPair.RegionFactoryPSet.RegionPSet.ptMin,
     originHalfLength = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepSeedsPair.RegionFactoryPSet.RegionPSet.originHalfLength,
     originRadius = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepSeedsPair.RegionFactoryPSet.RegionPSet.originRadius,
     layerList = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepSeedLayersPair.layerList.value()
 )
+
 #
 tobTecStepSeeds = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepSeeds.clone()
 
@@ -53,8 +46,8 @@ tobTecStepSeeds = RecoTracker.IterativeTracking.TobTecStep_cff.tobTecStepSeeds.c
 import FastSimulation.Tracking.TrackCandidateProducer_cfi
 tobTecStepTrackCandidates = FastSimulation.Tracking.TrackCandidateProducer_cfi.trackCandidateProducer.clone(
     src = cms.InputTag("tobTecStepSeeds"),
-    MinNumberOfCrossedLayers = 3
-    #hitMasks = cms.InputTag("tobTecStepMasks","hitMasks"),
+    MinNumberOfCrossedLayers = 3,
+    hitMasks = cms.InputTag("tobTecStepMasks"),
 )
 
 # tracks 

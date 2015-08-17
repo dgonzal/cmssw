@@ -1,3 +1,4 @@
+#include "FastSimulation/Tracking/plugins/TrajectorySeedProducer.h"
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/EventSetup.h"
@@ -15,8 +16,7 @@
 #include "Geometry/Records/interface/TrackerTopologyRcd.h"
 
 #include "FastSimulation/ParticlePropagator/interface/MagneticFieldMapRecord.h"
-
-#include "FastSimulation/Tracking/plugins/TrajectorySeedProducer.h"
+#include "FastSimulation/Tracking/interface/HitMaskHelper.h"
 
 #include "TrackingTools/TrajectoryParametrization/interface/CurvilinearTrajectoryError.h"
 #include "TrackingTools/TrajectoryState/interface/TrajectoryStateOnSurface.h"
@@ -64,12 +64,6 @@ TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf):
       hitMasksToken = consumes<std::vector<bool> >(hitMasksTag);
     }
     
-    hitCombinationMasks_exists = conf.exists("hitCombinationMasks");
-    if (hitCombinationMasks_exists){
-      edm::InputTag hitCombinationMasksTag = conf.getParameter<edm::InputTag> ("hitCombinationMasks");   
-      hitCombinationMasksToken = consumes<std::vector<bool> >(hitCombinationMasksTag);
-    }
-
     // The smallest number of hits for a track candidate
     minLayersCrossed = conf.getParameter<unsigned int>("minLayersCrossed");
 
@@ -93,8 +87,7 @@ TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf):
     }
     
     // The name of the hit producer
-    edm::InputTag recHitTag = conf.getParameter<edm::InputTag>("recHits");
-    recHitTokens = consumes<FastTMRecHitCombinations>(recHitTag);
+    recHitCombinationsToken = consumes<FastTrackerRecHitCombinationCollection>(conf.getParameter<edm::InputTag>("recHitCombinations"))
 
     // read Layers
     std::vector<std::string> layerStringList = conf.getParameter<std::vector<std::string>>("layerList");
@@ -359,17 +352,13 @@ void
 TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es) 
 {        
 
-  // the tracks to be skipped
-  edm::Handle<std::vector<bool> > hitMasks;
-  if (hitMasks_exists){  
-    e.getByToken(hitMasksToken,hitMasks);
-  }
-
-  edm::Handle<std::vector<bool> > hitCombinationMasks;
-  if (hitCombinationMasks_exists){ 
-    e.getByToken(hitCombinationMasksToken,hitCombinationMasks);	
-  }
-
+    // hit masks
+    std::unique_ptr<HitMaskHelper> hitMaskHelper;
+    if (hitMasks_exists){  
+	edm::Handle<std::vector<bool> > hitMasks;
+	e.getByToken(hitMasksToken,hitMasks);
+	hitMaskHelper.reset(new HitMaskHelper(hitMasks.product()));
+    }
 
     // Beam spot
     if (testBeamspotCompatibility)
@@ -394,20 +383,15 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
     edm::Handle<edm::SimVertexContainer> theSimVtx;
     e.getByToken(simVertexToken,theSimVtx);
     
-    edm::Handle<FastTMRecHitCombinations> recHitCombinations;
-    e.getByToken(recHitTokens, recHitCombinations);
+    edm::Handle<FastRecHitCombinationCollection> recHitCombinations;
+    e.getByToken(recHitCombinationsToken, recHitCombinations);
 
-    std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
+    std::unique_ptr<TrajectorySeedCollection> output(new TrajectorySeedCollection());
     
     for ( unsigned icomb=0; icomb<recHitCombinations->size(); ++icomb)
       {
-	if(hitCombinationMasks_exists
-	   && icomb < hitCombinationMasks->size() 
-	   && hitCombinationMasks->at(icomb))	    {
-	  continue;
-	}
-	
-	FastTMRecHitCombination recHitCombination = recHitCombinations->at(icomb);
+	  
+	FastTMRecHitCombination recHitCombination = (*recHitCombinations)[icomb];
 
 	uint32_t simTrackId = recHitCombination.back().simTrackId(0);
 	const SimTrack& theSimTrack = (*theSimTracks)[simTrackId];
@@ -432,16 +416,14 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
       std::vector<TrajectorySeedHitCandidate> trackerRecHits;
       for (const auto & _hit : recHitCombination )
 	{
-	  if(hitMasks_exists
-	     && size_t(_hit.id()) < hitMasks->size() 
-	     && hitMasks->at(_hit.id()))
-	    {
-	      continue;
-	    }
+	    // skip masked hits
+	    if(hitMaskHelper){
+		if(hitMaskHelper->mask(_hit.get()))
+		    continue;
 	  
 	  previousTrackerHit=currentTrackerHit;
 	  
-	  currentTrackerHit = TrajectorySeedHitCandidate(&_hit,trackerGeometry,trackerTopology);
+	  currentTrackerHit = TrajectorySeedHitCandidate(_hit->get(),trackerGeometry,trackerTopology);
 	  
 	  if (!currentTrackerHit.isOnTheSameLayer(previousTrackerHit))
 	    {
@@ -525,7 +507,7 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
 	    
 	  }
       } //end loop over recHitCombinations
-    e.put(output);
+      e.put(std::move(output));
 }
 
 
