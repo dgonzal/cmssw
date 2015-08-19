@@ -14,6 +14,14 @@ from SimTracker.VertexAssociation.VertexAssociatorByPositionAndTracks_cfi import
 from PhysicsTools.RecoAlgos.trackingParticleSelector_cfi import trackingParticleSelector as _trackingParticleSelector
 from CommonTools.RecoAlgos.sortedPrimaryVertices_cfi import sortedPrimaryVertices as _sortedPrimaryVertices
 from CommonTools.RecoAlgos.recoChargedRefCandidateToTrackRefProducer_cfi import recoChargedRefCandidateToTrackRefProducer as _recoChargedRefCandidateToTrackRefProducer
+# allow fastsim adaptions
+import Configuration.StandardSequences.SampleMode as SampleMode
+
+# fastsim hits have no clusters associated 
+if SampleMode.isFastSim():
+    quickTrackAssociatorByHits.associateStrip = False
+    quickTrackAssociatorByHits.associatePixel = False
+    quickTrackAssociatorByHits.useClusterTPAssociation = False
 
 ## Track selectors
 # Validation iterative steps
@@ -158,6 +166,20 @@ trackValidator.dodEdxPlots = True
 #trackValidator.maxpT = cms.double(3)
 #trackValidator.nintpT = cms.int32(40)
 
+if SampleMode.isFastSim():
+    # fastsim has no dedx estimates
+    trackValidator.dodEdxPlots = False
+    # fastsim has other hits
+    trackValidator.sim = [cms.InputTag('famosSimHits','TrackerHits')]
+    # required. TODO: understand why
+    trackValidator.stableOnlyTP = True
+    trackValidator.histoProducerAlgoBlock.generalTpSelector.stableOnly = True
+    trackValidator.histoProducerAlgoBlock.TpSelectorForEfficiencyVsEta.stableOnly = True
+    trackValidator.histoProducerAlgoBlock.TpSelectorForEfficiencyVsPhi.stableOnly = True
+    trackValidator.histoProducerAlgoBlock.TpSelectorForEfficiencyVsPt.stableOnly = True
+    trackValidator.histoProducerAlgoBlock.TpSelectorForEfficiencyVsVTXR.stableOnly = True
+    trackValidator.histoProducerAlgoBlock.TpSelectorForEfficiencyVsVTXZ.stableOnly = True
+
 # For efficiency of signal TPs vs. signal tracks, and fake rate of
 # signal tracks vs. signal TPs
 trackValidatorFromPV = trackValidator.clone(
@@ -292,15 +314,16 @@ tracksValidationTruth = cms.Sequence(
     trackingParticleRecoTrackAsssociation +
     VertexAssociatorByPositionAndTracks
 )
+
+# fastsim has no clusters
+if SampleMode.isFastSim():
+    tracksValidationTruth.remove(tpClusterProducer)
+
 tracksValidationTruthSignal = cms.Sequence(
     cms.ignore(trackingParticlesSignal) +
     tpClusterProducerSignal +
     quickTrackAssociatorByHitsSignal +
     trackingParticleRecoTrackAsssociationSignal
-)
-tracksValidationTruthFS = cms.Sequence(
-    quickTrackAssociatorByHits +
-    trackingParticleRecoTrackAsssociation
 )
 
 tracksPreValidation = cms.Sequence(
@@ -313,11 +336,6 @@ tracksPreValidationStandalone = cms.Sequence(
     tracksPreValidation +
     tracksValidationSelectorsFromPVStandalone
 )
-tracksPreValidationFS = cms.Sequence(
-    tracksValidationSelectors +
-    tracksValidationTruthFS
-)
-
 # selectors go into separate "prevalidation" sequence
 tracksValidation = cms.Sequence(
     trackValidator +
@@ -325,7 +343,6 @@ tracksValidation = cms.Sequence(
     trackValidatorFromPVAllTP +
     trackValidatorAllTPEffic
 )
-tracksValidationFS = cms.Sequence( trackValidator )
 
 tracksValidationStandalone = cms.Sequence(
     ak4PFL1FastL2L3CorrectorChain+
