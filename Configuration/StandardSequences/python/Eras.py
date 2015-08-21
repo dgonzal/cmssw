@@ -12,7 +12,8 @@ class Eras (object):
         self.run2_50ns_specific = cms.Modifier()
         self.run2_HI_specific = cms.Modifier()
         self.stage1L1Trigger = cms.Modifier()
-        
+        self.fastsim = cms.Modifier()
+
         # These are the eras that the user should specify
         self.Run2_25ns = cms.ModifierChain( self.run2_common, self.run2_25ns_specific, self.stage1L1Trigger )
         self.Run2_50ns = cms.ModifierChain( self.run2_common, self.run2_50ns_specific )

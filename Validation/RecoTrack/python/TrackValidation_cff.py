@@ -15,6 +15,8 @@ from PhysicsTools.RecoAlgos.trackingParticleSelector_cfi import trackingParticle
 from CommonTools.RecoAlgos.sortedPrimaryVertices_cfi import sortedPrimaryVertices as _sortedPrimaryVertices
 from CommonTools.RecoAlgos.recoChargedRefCandidateToTrackRefProducer_cfi import recoChargedRefCandidateToTrackRefProducer as _recoChargedRefCandidateToTrackRefProducer
 
+from Configuration.StandardSequences.Eras import eras
+
 ## Track selectors
 # Validation iterative steps
 cutsRecoTracksInitialStep = cutsRecoTracks_cfi.cutsRecoTracks.clone(algorithm=["initialStep"])
@@ -159,6 +161,17 @@ trackValidator.doPVAssociationPlots = True
 #trackValidator.maxpT = cms.double(3)
 #trackValidator.nintpT = cms.int32(40)
 
+eras.fastsim.toModify(trackValidator,dodEdxPlots = False)
+eras.fastsim.toModify(trackValidator,sim = [cms.InputTag('famosSimHits','TrackerHits')])
+eras.fastsim.toModify(trackValidator,stableOnlyTP = True)
+
+eras.fastsim.toModify(trackValidator.histoProducerAlgoBlock.TpSelectorForEfficiencyVsEta,stableOnly = True)
+eras.fastsim.toModify(trackValidator.histoProducerAlgoBlock.TpSelectorForEfficiencyVsPhi,stableOnly = True)
+eras.fastsim.toModify(trackValidator.histoProducerAlgoBlock.TpSelectorForEfficiencyVsPt,stableOnly = True)
+eras.fastsim.toModify(trackValidator.histoProducerAlgoBlock.TpSelectorForEfficiencyVsVTXR,stableOnly = True)
+eras.fastsim.toModify(trackValidator.histoProducerAlgoBlock.TpSelectorForEfficiencyVsVTXZ,stableOnly = True)
+
+
 # For efficiency of signal TPs vs. signal tracks, and fake rate of
 # signal tracks vs. signal TPs
 trackValidatorFromPV = trackValidator.clone(
@@ -295,16 +308,15 @@ tracksValidationTruth = cms.Sequence(
     trackingParticleRecoTrackAsssociation +
     VertexAssociatorByPositionAndTracks
 )
+eras.fastsim.toModify(tracksValidationTruth,lambda x : x.remove(tpClusterProducer))
+
 tracksValidationTruthSignal = cms.Sequence(
     cms.ignore(trackingParticlesSignal) +
     tpClusterProducerSignal +
     quickTrackAssociatorByHitsSignal +
     trackingParticleRecoTrackAsssociationSignal
 )
-tracksValidationTruthFS = cms.Sequence(
-    quickTrackAssociatorByHits +
-    trackingParticleRecoTrackAsssociation
-)
+eras.fastsim.toModify(tracksValidationTruthSignal,lambda x : x.remove(tpClusterProducerSignal))
 
 tracksPreValidation = cms.Sequence(
     tracksValidationSelectors +
@@ -316,10 +328,6 @@ tracksPreValidationStandalone = cms.Sequence(
     tracksPreValidation +
     tracksValidationSelectorsFromPVStandalone
 )
-tracksPreValidationFS = cms.Sequence(
-    tracksValidationSelectors +
-    tracksValidationTruthFS
-)
 
 # selectors go into separate "prevalidation" sequence
 tracksValidation = cms.Sequence(
@@ -328,8 +336,6 @@ tracksValidation = cms.Sequence(
     trackValidatorFromPVAllTP +
     trackValidatorAllTPEffic
 )
-tracksValidationFS = cms.Sequence( trackValidator )
-
 tracksValidationStandalone = cms.Sequence(
     ak4PFL1FastL2L3CorrectorChain+
     tracksPreValidationStandalone+
