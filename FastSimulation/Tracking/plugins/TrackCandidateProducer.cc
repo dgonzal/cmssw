@@ -13,6 +13,7 @@
 #include "DataFormats/TrajectorySeed/interface/TrajectorySeedCollection.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/TrackReco/interface/TrackExtraFwd.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHit.h"
 
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
@@ -20,6 +21,7 @@
 
 #include "FastSimulation/Tracking/interface/TrajectorySeedHitCandidate.h"
 #include "FastSimulation/Tracking/interface/HitMaskHelper.h"
+#include "FastSimulation/Tracking/interface/FastTrackingHelper.h"
 
 #include <vector>
 #include <map>
@@ -63,7 +65,7 @@ TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf)
   seedToken = consumes<edm::View<TrajectorySeed> >(seedLabel);
 
   edm::InputTag recHitCombinationsLabel = conf.getParameter<edm::InputTag>("recHitCombinations");
-  recHitCombinationsToken = consumes<FastRecHitCombinationCollection>(recHitCombinationsLabel);
+  recHitCombinationsToken = consumes<FastTrackerRecHitCombinationCollection>(recHitCombinationsLabel);
   
   propagatorLabel = conf.getParameter<std::string>("propagator");
 }
@@ -88,7 +90,7 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
   edm::Handle<edm::View<TrajectorySeed> > seeds;
   e.getByToken(seedToken,seeds);
 
-  edm::Handle<FastRecHitCombinationCollection> recHitCombinations;
+  edm::Handle<FastTrackerRecHitCombinationCollection> recHitCombinations;
   e.getByToken(recHitCombinationsToken, recHitCombinations);
 
   edm::Handle<edm::SimVertexContainer> simVertices;
@@ -111,33 +113,36 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 
   // loop over the seeds
   for (unsigned seednr = 0; seednr < seeds->size(); ++seednr){
+
     
-      const BasicTrajectorySeed seed = (*seeds)[seednr];
+      const TrajectorySeed seed = (*seeds)[seednr];
     if(seed.nHits()==0){
-      edm::LogError("TrackCandidateProducer") << "empty trajectory seed in TrajectorySeedCollection" << std::endl;
-      return;
+      edm::LogError("TrackCandidateProducer") << "empty trajectory seed in TrajectorySeedCollection: skip" << std::endl;
+      continue;
     }
 
     // Get the combination of hits that produced the seed
-    int32_t recHitCombinationIndex = -1;
-    if(!trackerHitRTTI::isFast(**seed.recHits().first())){
-	edm::LogError("TrackCandidateProducer") << "seed hits must be instances of FastTrackerRecHit class" << std::endl;
+    int32_t icomb = fastTrackingHelper::getRecHitCombinationIndex(seed);
+    if(icomb < 0 || unsigned(icomb) >= recHitCombinations->size()){
+	edm::LogError("TrackCandidateProducer") << " found seed with recHitCombination out or range: " << icomb << std::endl;
 	exit(1);
     }
-    const FastTrackerRecHitCombination & recHitCombination = (*recHitCombinations)[hitCombinationId];
+    const FastTrackerRecHitCombination & recHitCombination = (*recHitCombinations)[icomb];
 
     // select hits, temporarily store as TrajectorySeedHitCandidates
     std::vector<TrajectorySeedHitCandidate> recHitCandidates;
     TrajectorySeedHitCandidate recHitCandidate;
     unsigned numberOfCrossedLayers = 0;      
-    for (const auto & _hit : *recHitCombination) {
-
+    for (const auto & _hit : recHitCombination) {
+	
+	
 	// apply hit masking
 	if(hitMaskHelper 
-	   && hitMaskHelper->mask(_hit.get()))
+	   && hitMaskHelper->mask(_hit.get())){
 	    continue;
+	}
 
-      recHitCandidate = TrajectorySeedHitCandidate(&_hit,trackerGeometry.product(),trackerTopology.product());
+      recHitCandidate = TrajectorySeedHitCandidate(_hit.get(),trackerGeometry.product(),trackerTopology.product());
       if ( recHitCandidates.size() == 0 || !recHitCandidate.isOnTheSameLayer(recHitCandidates.back()) ) {
 	++numberOfCrossedLayers;
       }
@@ -173,12 +178,12 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     // Convert TrajectorySeedHitCandidate to TrackingRecHit and split hits
     edm::OwnVector<TrackingRecHit> trackRecHits;
     for ( unsigned index = 0; index<recHitCandidates.size(); ++index ) {
-	if(splitHits)
+	if(splitHits){
 	    hitSplitter.split(*recHitCandidates[index].hit(),trackRecHits);
-      }
-      else {
-	trackRecHits.push_back(recHitCandidates[index].hit()->clone());
-      }
+	}
+	else {
+	    trackRecHits.push_back(recHitCandidates[index].hit()->clone());
+	}
     }
     // reverse order if needed
     // when is this relevant? perhaps for the cases when track finding goes backwards?
@@ -186,9 +191,9 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
       LogDebug("FastTracking")<<"reversing the order of the hits";
       std::reverse(recHitCandidates.begin(),recHitCandidates.end());
     }
-    
+
     // initial track candidate parameters parameters
-    int32_t simTrackId = recHitCombination.back().simTrackId(0);
+    int32_t simTrackId = recHitCombination.back()->simTrackId(0);
     int vertexIndex = simTracks->at(simTrackId).vertIndex();
     GlobalPoint  position(simVertices->at(vertexIndex).position().x(),
 			  simVertices->at(vertexIndex).position().y(),
@@ -207,10 +212,12 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     const TrajectoryStateOnSurface initialTSOS = propagator->propagate(initialFTS,initialLayer->surface()) ;
     if (!initialTSOS.isValid()) continue; 
     PTrajectoryStateOnDet PTSOD = trajectoryStateTransform::persistentState(initialTSOS,trackRecHits.front().geographicalId().rawId()); 
-    TrackCandidate newTrackCandidate(trackRecHits,seed,PTSOD,edm::RefToBase<TrajectorySeed>(seeds,seednr));
+
+    // set the recHitIndex
+    fastTrackingHelper::setRecHitCombinationIndex(trackRecHits,icomb);
 
     // add track candidate to output collection
-    output->push_back(TrackCandidate(trackRecHits,seed,PTSOD,edm::RefToBase<TrajectorySeed>(fastSeedInfo.trajectorySeed)));
+    output->push_back(TrackCandidate(trackRecHits,seed,PTSOD,edm::RefToBase<TrajectorySeed>(seeds,seednr)));
   }
   
   // Save the track candidates

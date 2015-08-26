@@ -17,6 +17,7 @@
 
 #include "FastSimulation/ParticlePropagator/interface/MagneticFieldMapRecord.h"
 #include "FastSimulation/Tracking/interface/HitMaskHelper.h"
+#include "FastSimulation/Tracking/interface/FastTrackingHelper.h"
 
 #include "TrackingTools/TrajectoryParametrization/interface/CurvilinearTrajectoryError.h"
 #include "TrackingTools/TrajectoryState/interface/TrajectoryStateOnSurface.h"
@@ -87,7 +88,7 @@ TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf):
     }
     
     // The name of the hit producer
-    recHitCombinationsToken = consumes<FastTrackerRecHitCombinationCollection>(conf.getParameter<edm::InputTag>("recHitCombinations"))
+    recHitCombinationsToken = consumes<FastTrackerRecHitCombinationCollection>(conf.getParameter<edm::InputTag>("recHitCombinations"));
 
     // read Layers
     std::vector<std::string> layerStringList = conf.getParameter<std::vector<std::string>>("layerList");
@@ -349,7 +350,7 @@ std::vector<unsigned int> TrajectorySeedProducer::iterateHits(
 }
 
 void 
-TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es) 
+    TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es) 
 {        
 
     // hit masks
@@ -358,23 +359,29 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
 	edm::Handle<std::vector<bool> > hitMasks;
 	e.getByToken(hitMasksToken,hitMasks);
 	hitMaskHelper.reset(new HitMaskHelper(hitMasks.product()));
+
+	int nmasked = 0;
+	for(const auto & entry : *hitMasks)
+	    if(entry)
+		nmasked++;
     }
+
 
     // Beam spot
     if (testBeamspotCompatibility)
-      {
-        edm::Handle<reco::BeamSpot> recoBeamSpotHandle;
-        e.getByToken(beamSpotToken,recoBeamSpotHandle);
-        beamSpot = recoBeamSpotHandle.product();
-      }
+	{
+	    edm::Handle<reco::BeamSpot> recoBeamSpotHandle;
+	    e.getByToken(beamSpotToken,recoBeamSpotHandle);
+	    beamSpot = recoBeamSpotHandle.product();
+	}
     
     // Primary vertices
     if (testPrimaryVertexCompatibility)
-    {
-      edm::Handle<reco::VertexCollection> theRecVtx;
-        e.getByToken(recoVertexToken,theRecVtx);
-        primaryVertices = theRecVtx.product();
-    }
+	{
+	    edm::Handle<reco::VertexCollection> theRecVtx;
+	    e.getByToken(recoVertexToken,theRecVtx);
+	    primaryVertices = theRecVtx.product();
+	}
     
     // SimTracks and SimVertices
     edm::Handle<edm::SimTrackContainer> theSimTracks;
@@ -383,133 +390,137 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
     edm::Handle<edm::SimVertexContainer> theSimVtx;
     e.getByToken(simVertexToken,theSimVtx);
     
-    edm::Handle<FastRecHitCombinationCollection> recHitCombinations;
+    edm::Handle<FastTrackerRecHitCombinationCollection> recHitCombinations;
     e.getByToken(recHitCombinationsToken, recHitCombinations);
 
     std::unique_ptr<TrajectorySeedCollection> output(new TrajectorySeedCollection());
     
     for ( unsigned icomb=0; icomb<recHitCombinations->size(); ++icomb)
-      {
-	  
-	FastTMRecHitCombination recHitCombination = (*recHitCombinations)[icomb];
-
-	uint32_t simTrackId = recHitCombination.back().simTrackId(0);
-	const SimTrack& theSimTrack = (*theSimTracks)[simTrackId];
-	int vertexIndex = theSimTrack.vertIndex();
-	if (vertexIndex<0)
-	  {
-	    //tracks are required to be associated to a vertex
-	    continue;
-	  }
-	const SimVertex& theSimVertex = (*theSimVtx)[vertexIndex];
-	
-	if (!this->passSimTrackQualityCuts(theSimTrack,theSimVertex))
-	  {
-	    continue;
-	  }
-	
-	TrajectorySeedHitCandidate previousTrackerHit;
-	TrajectorySeedHitCandidate currentTrackerHit;
-	unsigned int layersCrossed=0;
-	
-
-      std::vector<TrajectorySeedHitCandidate> trackerRecHits;
-      for (const auto & _hit : recHitCombination )
 	{
-	    // skip masked hits
-	    if(hitMaskHelper){
-		if(hitMaskHelper->mask(_hit.get()))
-		    continue;
 	  
-	  previousTrackerHit=currentTrackerHit;
-	  
-	  currentTrackerHit = TrajectorySeedHitCandidate(_hit->get(),trackerGeometry,trackerTopology);
-	  
-	  if (!currentTrackerHit.isOnTheSameLayer(previousTrackerHit))
-	    {
-	      ++layersCrossed;
-	    }
-	  if (_seedingTree.getSingleSet().find(currentTrackerHit.getTrackingLayer())!=_seedingTree.getSingleSet().end())
-	    {
-	      //add only the hits which are actually on the requested layers
-	      trackerRecHits.push_back(std::move(currentTrackerHit));
-	    }
-	}
-      
-      if ( layersCrossed < minLayersCrossed)
-        {
-	  continue;
-        }
-      
-      std::vector<int> hitIndicesInTree(_seedingTree.numberOfNodes(),-1);
-      //A SeedingNode is associated by its index to this list. The list stores the indices of the hits in 'trackerRecHits'
-      /* example
-	 SeedingNode                     | hit index                 | hit
-	 -------------------------------------------------------------------------------
-	 index=  0:  [BPix1]             | hitIndicesInTree[0] (=1)  | trackerRecHits[1]
-	 index=  1:   -- [BPix2]         | hitIndicesInTree[1] (=3)  | trackerRecHits[3]
-	 index=  2:   --  -- [BPix3]     | hitIndicesInTree[2] (=4)  | trackerRecHits[4]
-	 index=  3:   --  -- [FPix1_pos] | hitIndicesInTree[3] (=6)  | trackerRecHits[6]
-	 index=  4:   --  -- [FPix1_neg] | hitIndicesInTree[4] (=7)  | trackerRecHits[7]
-	 
-	 The implementation has been chosen such that the tree only needs to be build once upon construction.
-      */
-      
-      std::vector<unsigned int> seedHitNumbers = iterateHits(0,trackerRecHits,hitIndicesInTree,true);
-      
-      if (seedHitNumbers.size()>0)
-        {
-	  edm::OwnVector<TrackingRecHit> recHits;
-	  for ( unsigned ihit=0; ihit<seedHitNumbers.size(); ++ihit )
-            {
-	      TrackingRecHit* aTrackingRecHit = trackerRecHits[seedHitNumbers[ihit]].hit()->clone();
-	      recHits.push_back(aTrackingRecHit);
-            }
-	  GlobalPoint  position((*theSimVtx)[vertexIndex].position().x(),
-				(*theSimVtx)[vertexIndex].position().y(),
-				(*theSimVtx)[vertexIndex].position().z());
-	  
-	  GlobalVector momentum(theSimTrack.momentum().x(),theSimTrack.momentum().y(),theSimTrack.momentum().z());
-	  float charge = theSimTrack.charge();
-	  GlobalTrajectoryParameters initialParams(position,momentum,(int)charge,magneticField);
-	  AlgebraicSymMatrix55 errorMatrix= AlgebraicMatrixID();
-	  //this line help the fit succeed in the case of pixelless tracks (4th and 5th iteration)
-	  //for the future: probably the best thing is to use the mini-kalmanFilter
-	  if(trackerRecHits[seedHitNumbers[0]].subDetId() !=1 ||trackerRecHits[seedHitNumbers[0]].subDetId() !=2)
-            {
-	      errorMatrix = errorMatrix * 0.0000001;
-            }
-	  CurvilinearTrajectoryError initialError(errorMatrix);
-	  FreeTrajectoryState initialFTS(initialParams, initialError);
-	  
-	  const GeomDet* initialLayer = trackerGeometry->idToDet( recHits.back().geographicalId() );
-	  const TrajectoryStateOnSurface initialTSOS = thePropagator->propagate(initialFTS,initialLayer->surface()) ;
-	  
-	  if (!initialTSOS.isValid())
-            {
-	      break;
-            }
-	  
-	  const AlgebraicSymMatrix55& m = initialTSOS.localError().matrix();
-	  int dim = 5; /// should check if corresponds to m
-	  float localErrors[15];
-	  int k = 0;
-	  for (int i=0; i<dim; ++i)
-	    {
-	      for (int j=0; j<=i; ++j)
-		{
-		  localErrors[k++] = m(i,j);
-		}
-	    }
-	    int surfaceSide = static_cast<int>(initialTSOS.surfaceSide());
-	    PTrajectoryStateOnDet initialState = PTrajectoryStateOnDet( initialTSOS.localParameters(),initialTSOS.globalMomentum().perp(),localErrors, recHits.back().geographicalId().rawId(), surfaceSide);
-	    output->push_back(TrajectorySeed(initialState, recHits, PropagationDirection::alongMomentum));
-	    
-	  }
-      } //end loop over recHitCombinations
-      e.put(std::move(output));
-}
 
+	    FastTrackerRecHitCombination recHitCombination = (*recHitCombinations)[icomb];
+
+	    uint32_t simTrackId = recHitCombination.back()->simTrackId(0);
+	    const SimTrack& theSimTrack = (*theSimTracks)[simTrackId];
+	    int vertexIndex = theSimTrack.vertIndex();
+	    if (vertexIndex<0)
+		{
+		    //tracks are required to be associated to a vertex
+		    continue;
+		}
+	    const SimVertex& theSimVertex = (*theSimVtx)[vertexIndex];
+	
+	    if (!this->passSimTrackQualityCuts(theSimTrack,theSimVertex))
+		{
+		    continue;
+		}
+	
+	    TrajectorySeedHitCandidate previousTrackerHit;
+	    TrajectorySeedHitCandidate currentTrackerHit;
+	    unsigned int layersCrossed=0;
+	
+
+	    std::vector<TrajectorySeedHitCandidate> trackerRecHits;
+	    for (const auto & _hit : recHitCombination )
+		{
+		    // skip masked hits
+		    if(hitMaskHelper && hitMaskHelper->mask(_hit.get()))
+			continue;
+		
+		    previousTrackerHit=currentTrackerHit;
+	  
+		    currentTrackerHit = TrajectorySeedHitCandidate(_hit.get(),trackerGeometry,trackerTopology);
+	  
+		    if (!currentTrackerHit.isOnTheSameLayer(previousTrackerHit))
+			{
+			    ++layersCrossed;
+			}
+		    if (_seedingTree.getSingleSet().find(currentTrackerHit.getTrackingLayer())!=_seedingTree.getSingleSet().end())
+			{
+			    //add only the hits which are actually on the requested layers
+			    trackerRecHits.push_back(std::move(currentTrackerHit));
+			}
+		}
+      
+	    if ( layersCrossed < minLayersCrossed)
+		{
+		    continue;
+		}
+
+	    // set the combination index
+      
+	    std::vector<int> hitIndicesInTree(_seedingTree.numberOfNodes(),-1);
+	    //A SeedingNode is associated by its index to this list. The list stores the indices of the hits in 'trackerRecHits'
+	    /* example
+	       SeedingNode                     | hit index                 | hit
+	       -------------------------------------------------------------------------------
+	       index=  0:  [BPix1]             | hitIndicesInTree[0] (=1)  | trackerRecHits[1]
+	       index=  1:   -- [BPix2]         | hitIndicesInTree[1] (=3)  | trackerRecHits[3]
+	       index=  2:   --  -- [BPix3]     | hitIndicesInTree[2] (=4)  | trackerRecHits[4]
+	       index=  3:   --  -- [FPix1_pos] | hitIndicesInTree[3] (=6)  | trackerRecHits[6]
+	       index=  4:   --  -- [FPix1_neg] | hitIndicesInTree[4] (=7)  | trackerRecHits[7]
+	 
+	       The implementation has been chosen such that the tree only needs to be build once upon construction.
+	    */
+      
+	    std::vector<unsigned int> seedHitNumbers = iterateHits(0,trackerRecHits,hitIndicesInTree,true);
+      
+	    if (seedHitNumbers.size()>0)
+		{
+		    edm::OwnVector<TrackingRecHit> recHits;
+		    for ( unsigned ihit=0; ihit<seedHitNumbers.size(); ++ihit )
+			{
+			    TrackingRecHit* aTrackingRecHit = trackerRecHits[seedHitNumbers[ihit]].hit()->clone();
+			    recHits.push_back(aTrackingRecHit);
+			}
+		    GlobalPoint  position((*theSimVtx)[vertexIndex].position().x(),
+					  (*theSimVtx)[vertexIndex].position().y(),
+					  (*theSimVtx)[vertexIndex].position().z());
+	  
+		    GlobalVector momentum(theSimTrack.momentum().x(),theSimTrack.momentum().y(),theSimTrack.momentum().z());
+		    float charge = theSimTrack.charge();
+		    GlobalTrajectoryParameters initialParams(position,momentum,(int)charge,magneticField);
+		    AlgebraicSymMatrix55 errorMatrix= AlgebraicMatrixID();
+		    //this line help the fit succeed in the case of pixelless tracks (4th and 5th iteration)
+		    //for the future: probably the best thing is to use the mini-kalmanFilter
+		    if(trackerRecHits[seedHitNumbers[0]].subDetId() !=1 ||trackerRecHits[seedHitNumbers[0]].subDetId() !=2)
+			{
+			    errorMatrix = errorMatrix * 0.0000001;
+			}
+		    CurvilinearTrajectoryError initialError(errorMatrix);
+		    FreeTrajectoryState initialFTS(initialParams, initialError);
+	  
+		    const GeomDet* initialLayer = trackerGeometry->idToDet( recHits.back().geographicalId() );
+		    const TrajectoryStateOnSurface initialTSOS = thePropagator->propagate(initialFTS,initialLayer->surface()) ;
+	  
+		    if (!initialTSOS.isValid())
+			{
+			    break;
+			}
+	  
+		    const AlgebraicSymMatrix55& m = initialTSOS.localError().matrix();
+		    int dim = 5; /// should check if corresponds to m
+		    float localErrors[15];
+		    int k = 0;
+		    for (int i=0; i<dim; ++i)
+			{
+			    for (int j=0; j<=i; ++j)
+				{
+				    localErrors[k++] = m(i,j);
+				}
+			}
+		    int surfaceSide = static_cast<int>(initialTSOS.surfaceSide());
+		    PTrajectoryStateOnDet initialState = PTrajectoryStateOnDet( initialTSOS.localParameters(),initialTSOS.globalMomentum().perp(),localErrors, recHits.back().geographicalId().rawId(), surfaceSide);
+
+		    fastTrackingHelper::setRecHitCombinationIndex(recHits,icomb);
+
+		    output->push_back(TrajectorySeed(initialState, recHits, PropagationDirection::alongMomentum));
+
+		} //end loop over recHitCombinations
+	}
+    e.put(std::move(output));
+}
 
 
 bool

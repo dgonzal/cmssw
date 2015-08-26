@@ -7,6 +7,7 @@
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
+#include "DataFormats/TrackerRecHit2D/interface/FastTrackerRecHitCollection.h"
 
 #include "SimDataFormats/Track/interface/SimTrackContainer.h"
 #include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
@@ -63,7 +64,6 @@ class TrajectorySeedProducer:
         edm::EDGetTokenT<edm::SimTrackContainer> simTrackToken;
         edm::EDGetTokenT<edm::SimVertexContainer> simVertexToken;
         edm::EDGetTokenT<FastTrackerRecHitCombinationCollection> recHitCombinationsToken;
-        edm::EDGetTokenT<FastTMRecHitCombination> recHitToken;
         edm::EDGetTokenT<reco::VertexCollection> recoVertexToken;
 	edm::EDGetTokenT<std::vector<bool> > hitMasksToken;        
     public:
