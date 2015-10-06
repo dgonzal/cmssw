@@ -14,6 +14,8 @@ make program=test_stepFactory.C
 ## run
 
 ```
-./bin/test_start
-./bin/test_stepFactory
+./bin/test_start          # test the generation of the shower starting piont
+./bin/test_stepFactory    # test the creation of shower steps
+./bin/test_singleShapeParametersGenerator   # test the generation of shower shape parameters
+./bin/test_showerShape    # comprehensive test of shower generation
 ```
