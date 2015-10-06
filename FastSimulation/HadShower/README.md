@@ -84,7 +84,7 @@ See test/test_shapeParametersGenerator.C for an example illustrating the usage o
 
 ## Shower steps
 
-Given the starting point of the shower (modeled in StartGenerator),
+Given the starting point of the shower (modeled in hadshower::StartGenerator),
 the class hadshower::StepsFactory calculates the position and size of the steps (bins) in which the shower is modeled.
 
 The first step starts at the starting point.
@@ -101,9 +101,9 @@ See test/test_stepFactory.C for an example illustrating the usage of hadshower::
 ## Shower modeling
 
 Given the starting point and the shape parameters,
-The Shape's constructor obtains the shower steps using the StepsFactory.
+the constructor of the class hadshower::Shape obtains the shower steps using the hadshower::StepsFactory.
 Then it calculates and stores for each step how much of the shower's energy it contains, and the transverse size of the shower.
 Shape::generateEnergySpot allows to draw positions in the transverse plain defined by a given step,
 distributed according to the transverse energy profile at the center of the step.
 
-See test/test_shape.C for an example illustrating the usage of hadshower::ShapeParametersGenerator.
+See test/test_shape.C for an example illustrating the usage of hadshower::Shape.
