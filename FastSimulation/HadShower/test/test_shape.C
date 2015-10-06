@@ -35,9 +35,11 @@ int main(){
     //   - thickness (interaction lenghts), 
     //   - cm per interaction lenght, 
     //   - radiation lenghts per interaction lenght
-    hadshower::Material ecal(hadshower::Material::ECAL,0,12,10);
-    hadshower::Material gap(hadshower::Material::GAP,0,12,10);
-    hadshower::Material hcal(hadshower::Material::HCAL,12,0.5,10);
+    // the values for thickness and radiation lenghts per interaction lenght are given for the barrel and for a particle that hits perpundicularly
+    // the values for cm per interaction length are dymmy placeholders. They have no impact on the modeling.
+    hadshower::Material ecal(hadshower::Material::ECAL,1.246,1.,25.895/1.246);
+    hadshower::Material gap(hadshower::Material::GAP,0.180,1.,1.133/0.180);
+    hadshower::Material hcal(hadshower::Material::HCAL,8.930,1.,8.930/93.984);
     
     // store some histograms
     TFile * oFile = TFile::Open("shape.root","RECREATE");
