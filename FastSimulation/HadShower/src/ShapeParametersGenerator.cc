@@ -1,5 +1,5 @@
-#include "FastSimulation/HadShower/interface/SingleShapeParametersGenerator.h"
-#include "FastSimulation/HadShower/interface/SingleShapeParameters.h"
+#include "FastSimulation/HadShower/interface/ShapeParametersGenerator.h"
+#include "FastSimulation/HadShower/interface/ShapeParameters.h"
 #include "FastSimulation/HadShower/interface/Parameters.h"
 #include "CLHEP/Random/RandomEngine.h"
 
@@ -7,14 +7,14 @@
 
 using namespace hadshower;
 
-SingleShapeParametersGenerator::SingleShapeParametersGenerator(const Parameters & parameters) 
+ShapeParametersGenerator::ShapeParametersGenerator(const Parameters & parameters) 
     : parameters(&parameters)
 {}
 
-std::unique_ptr<SingleShapeParameters> SingleShapeParametersGenerator::generate(double energy,CLHEP::HepRandomEngine & random) const{
+std::unique_ptr<ShapeParameters> ShapeParametersGenerator::generate(double energy,CLHEP::HepRandomEngine & random) const{
 
     // the product
-    std::unique_ptr<SingleShapeParameters> singleShapeParameters(new SingleShapeParameters);    
+    std::unique_ptr<ShapeParameters> singleShapeParameters(new ShapeParameters);    
 
     // take care of the energy range used for tuning
     double limitedEnergy = energy;
@@ -44,7 +44,7 @@ std::unique_ptr<SingleShapeParameters> SingleShapeParametersGenerator::generate(
     singleShapeParameters->R2prime *= transverseShapeFluctuationFactor;
  
     // longitudinal shape fluctuations
-    double longitudinalShapeFluctuationFactor = 1. + 0.05 * (2.* random.flat() - 1.);
+    double longitudinalShapeFluctuationFactor = 1. + 0.3 * (2.* random.flat() - 1.);
     singleShapeParameters->alphaEM *= longitudinalShapeFluctuationFactor;
     singleShapeParameters->alphaHad *= longitudinalShapeFluctuationFactor;
 

@@ -3,7 +3,7 @@
 
 namespace hadshower {
 
-    class SingleShapeParameters {
+    class ShapeParameters {
 
 	public:
 

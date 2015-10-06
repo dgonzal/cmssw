@@ -1,6 +1,6 @@
 #include "FastSimulation/HadShower/interface/Parameters.h"
-#include "FastSimulation/HadShower/interface/SingleShapeParametersGenerator.h"
-#include "FastSimulation/HadShower/interface/SingleShapeParameters.h"
+#include "FastSimulation/HadShower/interface/ShapeParametersGenerator.h"
+#include "FastSimulation/HadShower/interface/ShapeParameters.h"
 
 #include "TFile.h"
 #include "TH1D.h"
@@ -15,9 +15,9 @@ int main(){
     double energy = 10;
     CLHEP::HepJamesRandom random;
     Parameters parameters;
-    SingleShapeParametersGenerator singleShapeParametersGenerator(parameters);
+    ShapeParametersGenerator shapeParametersGenerator(parameters);
     
-    TFile * oFile = TFile::Open("test_singleShapeParameters.root","RECREATE");
+    TFile * oFile = TFile::Open("shapeParametersGenerator.root","RECREATE");
     oFile->cd();
     TH1D * h_alphaEM = new TH1D("alphaEM","alphaEM",100,0,3);
     TH1D * h_betaEM = new TH1D("betaEM","betaEM",100,0,3);
@@ -26,13 +26,13 @@ int main(){
 
     unsigned nShowers = 100;
     for(unsigned i = 0;i<nShowers;i++){
-	auto singleShapeParameters = singleShapeParametersGenerator.generate(energy,random);
-	h_alphaEM->Fill(singleShapeParameters->alphaEM);
-	h_betaEM->Fill(singleShapeParameters->betaEM);
+	auto shapeParameters = shapeParametersGenerator.generate(energy,random);
+	h_alphaEM->Fill(shapeParameters->alphaEM);
+	h_betaEM->Fill(shapeParameters->betaEM);
     }
 
     std::cout << "finalizing..." << std::endl;
-
+    
     oFile->Write();
     oFile->Close();
     delete oFile;

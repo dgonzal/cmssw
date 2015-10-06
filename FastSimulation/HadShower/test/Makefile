@@ -12,14 +12,20 @@ CFLAGS = -I$(CLHEP_PATH)include -I$(CMSSW_BASE)/src `root-config --cflags`
 CC = g++ -std=c++11
 LIBS =  `ls $(LIBDIR)*.o` `root-config --libs` -L$(CLHEP_PATH)/lib/ -lCLHEP-2.2.0.4
 
+PROGRAMS = $(wildcard *.C)
+BINARIES = $(foreach program,$(PROGRAMS),$(BINDIR)$(subst .C,,$(program)))
+
 BINARY=$(subst .C,,$(program))
+
+.PRECIOUS: $(LIBDIR)%.o
 
 $(LIBDIR)%.o : $(CCDIR)%.cc $(HFILES) | $(LIBDIR) 
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-
-$(BINDIR)$(BINARY): $(program) $(OFILES) | $(BINDIR)
+$(BINDIR)% : ./%.C $(OFILES) | $(BINDIR)
 	$(CC) -o $@ $< $(CFLAGS) $(LIBS)
+
+all: $(BINARIES)
 
 $(LIBDIR):
 	mkdir -p $(LIBDIR)
@@ -28,5 +34,6 @@ $(BINDIR):
 	mkdir -p $(BINDIR)
 
 clean:
-	rm $(LIBDIR)/*
-	rm $(BINDIR)/*
+	@for file in $(wildcard $(LIBDIR)/*); do echo "rm $$file"; rm $$file; done
+	@for file in $(wildcard $(BINDIR)/*); do echo "rm $$file"; rm $$file; done
+	@for file in $(wildcard ./*.root); do echo "rm $$file"; rm $$file; done
