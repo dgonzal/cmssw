@@ -20,6 +20,8 @@ namespace hadshower {
 	const double size;
 	const double sizeInRadLen;
 	const double sizeInCm;
+	double R50;
+	double energyFraction;
     };
 
 }

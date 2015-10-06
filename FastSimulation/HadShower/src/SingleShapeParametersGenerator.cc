@@ -48,6 +48,9 @@ std::unique_ptr<SingleShapeParameters> SingleShapeParametersGenerator::generate(
     singleShapeParameters->alphaEM *= longitudinalShapeFluctuationFactor;
     singleShapeParameters->alphaHad *= longitudinalShapeFluctuationFactor;
 
+    // calculate the ecal energy factor
+    singleShapeParameters->ecalEnergyFactor = 2. * 0.9 * random.flat();
+
     return singleShapeParameters;
 
 }
