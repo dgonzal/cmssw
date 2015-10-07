@@ -1,11 +1,10 @@
 # Introduction
 
-The package FastSimulation/HadShower contains a fast model for hadronic showers int the CMS calorimeter system, loosely based on [1].
-This package is a re-implementation of the class ​HDShower in the package /FastSimulation/ShowerDevelopment
+The package FastSimulation/HadShower contains a fast model for hadronic showers in the CMS calorimeter, loosely based on GFLASH [1]. This package is a re-implementation of the class HDShower in the package /FastSimulation/ShowerDevelopment
 
 # Installation
 
-## collect the package
+## Collect the package
 
 ```
 cmsrel CMSSW_A_B_C  # e.g. CMSSW_7_6_0_pre4
@@ -14,7 +13,7 @@ cmsenv
 git cms-merge-topic lveldere:fastsim-hadshower
 ```
 
-## compile outside CMSSW
+## Compile outside CMSSW
 
 ```
 # setup CMSSW in order to use correct compiler, root version, etc.
@@ -25,7 +24,7 @@ cd FastSimulation/HadShower/test
 make # use option -j 8 to gain speed
 ```
 
-## run outside CMSSW
+## Run outside CMSSW
 
 ```
 # setup CMSSW in order to use correct interpreter, root version, etc.
@@ -38,34 +37,34 @@ cmsenv
 ./bin/test_shape                      # comprehensive test of shower generation
 ```
 
-## compile inside CMSSW
+## Compile inside CMSSW
 
 under development
 
-## run inside CMSSW
+## Run inside CMSSW
 
 under development
 
 
 
-# Description of the hadronic shower model and its implementation
+# Description of the shower model
 
 ## Overview
 
-The modeling of a shower initiated by a hadron has the following components
-1. modeling of the *shower start*, where the shower start is the first inelastic interaction of the hadron in the calorimeter
-2. define *shower steps* along the shower's direction to define the resolution by which to model the shower
-3. modeling of the expected *energy distribution* of the shower
-5. sampling of the expected energy distribution of the shower to model the shower's *energy depositions*
+The modeling of a shower initiated by a hadron has the following ingredients:
+  1. the modeling of the **shower start**, where the shower start is the first inelastic interaction of the hadron in the calorimeter
+  2. the definition of **shower steps** along the shower's direction to define the resolution by which to model the shower
+  3. the modeling of the expected **energy distribution** of the shower
+  4. the sampling of the expected *energy distribution** of the shower to model the shower's *energy depositions*
 
 ## Units and coordinates
 
 Energy is expressed in GeV.
 
-Distance is mostly expressed in the units of interaction length.
+Distance is mostly expressed in the unit of interaction length.
 Alternative units are centimeter and radiation lenght.
 Whenever one or another variable is expressed in these alternative units,
-this is made clear in the code by letting the variable name end with InCm or InRadLen.
+this is made clear in the code by letting the variable name end with respectively InCm or InRadLen.
 
 TODO: provide references to proper definitions of interaction lenght and radiation length
 
@@ -86,8 +85,8 @@ Material properties are stored in objects of type hadshower::Material.
 
 ## Shower start
 
-Since we work in units of interaction lenght,
-the distribution of the distance particles travels through the calorimeter until a first inelastic interaction 
+Since the unit of interaction lenght is used,
+the distribution of the distance particles travel through the calorimeter until undergoing an inelastic interaction 
 is modeled by a simple exponential with mean 1 (remember the unit is interaction length).
 
 This model is implemented in the class hadshower::StartGenerator
@@ -104,30 +103,31 @@ until a certain maximum number of steps is reached.
 
 Shower steps are stored in containers of type hadshower::Step.
 hadshower::Step::depth stores the distance between the shower start and the start of the step.
-hadshower::Step::size stores the size of the step.
+hadshower::Step::size stores the size (thickness) of the step.
 
 For a given shower, the shower steps are created by the class hadshower::StepFactory.
-
 See test/test_stepFactory.C for an example illustrating the usage of hadshower::StepFactory.
 
 ## Expected energy distribution
 
 The expected longitudinal (transverse) energy distribution is modeled according to eq. 9 (7) of [1].
 The parameter values are drawn randomly around mean values obtained from FullSim.
-When the shower starts in ECAL, the longitudinal energy distribution is altered by factor
-that (is supposed to) correct how much energy is expected in ECAL compared to HCAL.
-The width and shape of these parameter value distributions are not extremely well motivated (as far as understood).
+When the shower starts in ECAL, the longitudinal energy distribution is altered by 
+first multiplying the expected energy in ECAL with a correction factor,
+and subsequently normalizing the energy fractions in all steps.
+The values of all involved parameters follow distributions
+with widths and shapes that are not extremely well motivated (as far as understood).
 
-The parameter values of the expected energy distribution are stored in an object of type hadshower::ShapeParameters.
-For a given shower, the parameter values are generated by the class hadshower::ShapeParametersGenerator.
+For a given shower, the parameter values are generated by the class hadshower::ShapeParametersGenerator
+and stored in an object of type hadshower::ShapeParameters.
 See test/test_shapeParametersGenerator.C for an example illustrating the usage of hadshower::ShapeParametersGenerator.
 
 ## Energy depositions
 
 Energy depositions are drawn from the expected energy distribution.
 The depositions have all (nearly) the same energy and are drawn from the energy distribution in such fashion
-that the energy of the deposition in each step exactly adds up to expected energy in that step.
-This implies that FastSimulation/HadShower provides no model for a whole range of fluctuations that take place in real showers.
+that the energy of the deposition in each step exactly adds up to the expected energy in that step.
+This implies that FastSimulation/HadShower provides no model at all for a whole range of fluctuations that take place in actual showers.
 
 Energy depositions are generated by the class hadshower::Shape.
 See test/test_shape.C for an example illustrating the usage of this class.
@@ -143,17 +143,22 @@ This avoids dependence on complicated geometry classes.
 
 # Open questions
 
-Would it be better to let shower steps in hcal follow the segmentation of hcal?
-
 Can we model the shower energy response in a more fundamental way,
 e.g. by actually modeling sampling fluctuations.
 See section 3.2 of [2]
+
+In the same context, would it be better to let shower steps in hcal follow the segmentation of hcal?
 
 Is the ratio of energy deposited in active material over energy deposited in passive material constant along the longitudinal direction?
 
 How to better model all shower fluctuations?
 
 ...
+
+# To do
+
+Handle the energy dependence of the interaction length when modeling the shower start
+(In HDShower this is taken care of by the mip-fraction)
 
 # References
 
